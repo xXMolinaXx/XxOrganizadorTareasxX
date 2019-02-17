@@ -1,0 +1,11 @@
+Cliente - Usuario: los atributos ya los sabes, pienso que debe de ir por que son ellos para quienes esta destinada la aplicación.
+Publicacion: puesto que cuando publiquen sus proyectos su modo de comunicarse sera por “publicaciones” valga la redundancia.
+Proyecto: este es la base de jira, y varios usuarios colaboran en el proyecto
+TipoUsuario: ya sea empresarial o colaborador, o de cierto acceso por ejemplo cuenta gratuita o cuenta pagada. 
+Comentario: ya que una publicacion del proyecto puede tener comentarios.
+Equipos: ya que los usuarios pueden hacer equipos para organizar el proyecto.
+TipoProyecto: (lei que hay unos que son super privados) entonces puede ser Publico, Privado y MegaPrivado. 
+Asociaciones: pues mas que todo es por si otro equipo colabora en el proyecto colabora.
+Documentacion: para la parte de subir archivos supongo que asi se deberia de llamar, pero, deja averiguo bien.
+HistorialActividades: donde se plasme la lista de publicaciones que se han hecho.
+Notificaciones: cuando alguien haga algun cambio o una publicacion se le notifique a los demas.
