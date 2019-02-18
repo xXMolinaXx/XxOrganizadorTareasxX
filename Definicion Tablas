@@ -1,7 +1,7 @@
 Usuario:este es la informacion que se guardara de un usuario registrado en la plataforma
 equipos:es tatabla se define como la agrupacion de usuarios que van a estar en un equipo de trabajo dedicado a metas o tareas en especifico
 proyectos:es la informacion general de un nuevo proyecto
-exigibilidad :es un catalgo donde se definiran si las tareas o proyecto son de urgencia,maxima importancia,si se pueden dejar en pendiente o intermedio entre las opcones anteriores
+exigibilidad :es un catalgo donde se definiran si las tareas tienen prioridad alta,baja,media
 tareas:se describiran en nombre de las tareas,instruciones a seguir o descripcion de que se desea
 cometarios:otros usuario pueden comentar las tareas como por ejemplo hacer peticiones de mas tiempo agregar mas companero para ser ayudados 
 nivel del usuario:esta tabla se definiran si un usuario es jefe(que puede asignar tareas,borrar o modificar)o colaborador solo puede visualizar
@@ -9,3 +9,6 @@ equipoDeTrabajo:es la tabla intemedia entre equipos y usuarios,esta es la quedin
 notificaciones:notifica cambios 
 usuario-proyecto:es la tabla intermedia entre proyecto y usuario donde se define el usuario que trabaja en tal proyecto
 listas:es donde se agrupa las tareas
+archivos:generalizacion de las tablas de documentos
+imagenes:especializacion de archivos
+documentos:especializacion de archivos
