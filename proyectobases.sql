@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 24-03-2019 a las 13:17:41
+-- Tiempo de generación: 24-03-2019 a las 21:05:13
 -- Versión del servidor: 5.7.21
 -- Versión de PHP: 5.6.35
 
@@ -21,6 +21,19 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `proyectobases`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `administradores`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `administradores`;
+CREATE TABLE IF NOT EXISTS `administradores` (
+`apodo_nombre` varchar(182)
+,`nombre_tablero` varchar(100)
+,`descripcion` varchar(20)
+);
 
 -- --------------------------------------------------------
 
@@ -115,7 +128,7 @@ CREATE TABLE IF NOT EXISTS `checkbox` (
   `tareas_idtareas` int(11) NOT NULL COMMENT 'id de la tarea',
   PRIMARY KEY (`idcheckbox`),
   KEY `FK_check` (`tareas_idtareas`)
-) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `checkbox`
@@ -145,7 +158,33 @@ INSERT INTO `checkbox` (`idcheckbox`, `descripcion`, `tareas_idtareas`) VALUES
 (21, 'chexkbox2a 1 1 1 11 1', 31),
 (22, 'chexkbox3123 121212121', 29),
 (23, 'chexkbox242132112   11 1 1 11 1 ', 50),
-(24, 'chexkbox25123123 12    2323  ', 40);
+(24, 'chexkbox25123123 12    2323  ', 40),
+(25, 'checkbox 1', 1),
+(26, 'checkbox 2', 1),
+(27, 'checkbox 3', 1),
+(28, 'checkbox 4', 1),
+(29, 'checkbox 5', 5),
+(30, 'checkbox 6', 3),
+(31, 'checkbox 8', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `checkbox_tareas`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `checkbox_tareas`;
+CREATE TABLE IF NOT EXISTS `checkbox_tareas` (
+`Ntablero` varchar(100)
+,`dTblero` varchar(10000)
+,`lista` varchar(100)
+,`NTAREA` varchar(40)
+,`DTAREA` varchar(1000)
+,`fechaCreacion` datetime
+,`fechaMaxima` datetime
+,`ENOMBRE` varchar(40)
+,`CHE` varchar(10000)
+);
 
 -- --------------------------------------------------------
 
@@ -218,7 +257,7 @@ CREATE TABLE IF NOT EXISTS `documentos` (
 
 DROP TABLE IF EXISTS `evaluacion`;
 CREATE TABLE IF NOT EXISTS `evaluacion` (
-  `idevaluacion` int(11) NOT NULL,
+  `idevaluacion` int(11) NOT NULL AUTO_INCREMENT,
   `descripcion` varchar(1000) DEFAULT NULL COMMENT 'comentario corto para decir cuales fueron las acines buenas y malas de un usaurio',
   `fechaElaborada` date DEFAULT NULL,
   `puntosDados` int(11) DEFAULT NULL COMMENT 'se da una calificacion basada en los puntos maximos que se asgina',
@@ -226,7 +265,17 @@ CREATE TABLE IF NOT EXISTS `evaluacion` (
   `usuario_idusuario` int(11) DEFAULT NULL,
   PRIMARY KEY (`idevaluacion`),
   KEY `FK_usuario` (`usuario_idusuario`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `evaluacion`
+--
+
+INSERT INTO `evaluacion` (`idevaluacion`, `descripcion`, `fechaElaborada`, `puntosDados`, `puntosMaximos`, `usuario_idusuario`) VALUES
+(1, 'se a tardado mucho en entregar sus tiempo se le hizo mucha mora,pero finalmente los entrego,pero debe de mejor en la puntualidad', '2019-03-13', 8, 10, 1),
+(2, 'haciendo una pruebaa', '2019-03-09', 2, 10, 2),
+(3, 'haciendo una evaluacion', '2019-03-15', 10, 10, 2),
+(4, 'es irresponsable en con las entregas,hace mal los trabajos y no le interesa trabjar ', '2019-03-15', 0, 100, 1);
 
 -- --------------------------------------------------------
 
@@ -236,13 +285,40 @@ CREATE TABLE IF NOT EXISTS `evaluacion` (
 
 DROP TABLE IF EXISTS `evaluaciondesempenio`;
 CREATE TABLE IF NOT EXISTS `evaluaciondesempenio` (
-  `idevaluacionDesempenio` int(11) NOT NULL,
+  `idevaluacionDesempenio` int(11) NOT NULL AUTO_INCREMENT,
   `evaluacion_idevaluacion` int(11) NOT NULL,
   `notificacion_idnotificacion` int(11) NOT NULL,
   PRIMARY KEY (`idevaluacionDesempenio`),
   KEY `FK_eva` (`evaluacion_idevaluacion`),
   KEY `FK_notificaciones` (`notificacion_idnotificacion`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `evaluaciondesempenio`
+--
+
+INSERT INTO `evaluaciondesempenio` (`idevaluacionDesempenio`, `evaluacion_idevaluacion`, `notificacion_idnotificacion`) VALUES
+(1, 1, 2),
+(2, 2, 4),
+(3, 3, 1),
+(4, 4, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `evaluacionhecha`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `evaluacionhecha`;
+CREATE TABLE IF NOT EXISTS `evaluacionhecha` (
+`descripcion` varchar(1000)
+,`fechaElaborada` date
+,`puntosDados` int(11)
+,`puntosMaximos` int(11)
+,`porcentajeObtenido` decimal(17,4)
+,`evaluado` varchar(213)
+,`evaluador` varchar(213)
+);
 
 -- --------------------------------------------------------
 
@@ -436,20 +512,6 @@ INSERT INTO `listas` (`idlistas`, `nombre`, `tablero_idtablero`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `mensajeenviados`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `mensajeenviados`;
-CREATE TABLE IF NOT EXISTS `mensajeenviados` (
-`textoMensaje` varchar(10000)
-,`fechaMensaje` date
-,`envia` varchar(183)
-,`resive` varchar(184)
-);
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `mensajes`
 --
 
@@ -487,6 +549,20 @@ INSERT INTO `mensajes` (`idmensajes`, `textoMensaje`, `fechaMensaje`, `BM_idBM_R
 (15, 'hola estamos probando los mensaje', '2019-03-24', 9, 7),
 (16, 'probado probando probando', '2019-03-24', 11, 8),
 (17, 'guardando guardando guardando giaradass', '2019-03-08', 9, 8);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `mensajesenviados`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `mensajesenviados`;
+CREATE TABLE IF NOT EXISTS `mensajesenviados` (
+`textoMensaje` varchar(10000)
+,`fechaMensaje` date
+,`envia` varchar(183)
+,`resive` varchar(184)
+);
 
 -- --------------------------------------------------------
 
@@ -651,6 +727,19 @@ INSERT INTO `pais` (`idpais`, `nombre`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura Stand-in para la vista `privilegiosdeusuario`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `privilegiosdeusuario`;
+CREATE TABLE IF NOT EXISTS `privilegiosdeusuario` (
+`apodo_nombre` varchar(182)
+,`nombre_tablero` varchar(100)
+,`descripcion` varchar(20)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `recordatorios`
 --
 
@@ -734,23 +823,23 @@ INSERT INTO `tareas` (`idtareas`, `nombre`, `descripcion`, `fechaCreacion`, `fec
 (5, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
 (6, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 5),
 (7, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 7),
-(8, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 12),
-(9, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 15),
-(10, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 14),
-(11, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 22),
-(12, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 21),
-(13, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 15),
-(14, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 17),
+(8, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 2),
+(9, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 3),
+(10, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 2),
+(11, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 1),
+(12, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 3),
+(13, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 4),
+(14, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 5),
 (15, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 1),
 (16, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 1),
-(17, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 2),
+(17, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
 (18, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 2),
-(19, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
+(19, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 3),
 (20, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 3),
 (21, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 1),
 (22, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 2),
 (23, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 3),
-(24, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 14),
+(24, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
 (25, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 1),
 (26, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
 (27, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 3),
@@ -951,7 +1040,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `fechaNacimiento` date DEFAULT NULL,
   PRIMARY KEY (`idusuario`),
   KEY `FK_Pais` (`pais_idpais`)
-) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
@@ -969,46 +1058,36 @@ INSERT INTO `usuario` (`idusuario`, `nombreUsuario`, `descripcion`, `correo`, `C
 (9, 'Rockgun', 'soy ammante de la armas de fuego', 'gun_fuckers@gmail.com', 'qwerty', 'mario', 'javier', 'castaneda', 'rodriguez', 5, '1990-12-15'),
 (10, 'THE ROCK', 'actor de hollywood', 'dawye-therock@yahoo.com', 'qweqwrwetrt', 'dawne', 'davis', 'johnson', 'black', 5, '1960-01-01'),
 (11, 'DEVI', 'hola mundo', 'devian123insali@outlook.com', 'devian', 'devian', 'monserat', 'insali', 'neveg', 6, '1997-05-18'),
-(12, 'BlackAdam', 'soy afroamerciano y me gusta el rap', 'blackadam@outlook.com', 'blacki', 'adam', NULL, 'forest', 'gump', 5, '1995-08-20');
+(12, 'BlackAdam', 'soy afroamerciano y me gusta el rap', 'blackadam@outlook.com', 'blacki', 'adam', NULL, 'forest', 'gump', 5, '1995-08-20'),
+(13, 'xXMolinaXx', 'hola mundo', 'molina123@gmail.com', 'qwerty', 'mario', 'javier', 'MARTINEZ', 'alvarez', 10, '1990-03-20'),
+(14, 'rubius', 'probando probando probando probando probando', 'rubius@yahoo.com', 'asdas', 'lenin', 'abdi', 'alvarez', 'alonzo', 10, '1980-05-12');
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `usuarioptablero`
--- (Véase abajo para la vista actual)
+-- Estructura para la vista `administradores`
 --
-DROP VIEW IF EXISTS `usuarioptablero`;
-CREATE TABLE IF NOT EXISTS `usuarioptablero` (
-);
+DROP TABLE IF EXISTS `administradores`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `administradores`  AS  select concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `apodo_nombre`,`tab`.`nombre` AS `nombre_tablero`,`nu`.`descripcion` AS `descripcion` from (((`uatablero` `uata` join `usuario` `us` on((`us`.`idusuario` = `uata`.`usuario_idusuario`))) join `tablero` `tab` on((`tab`.`idtablero` = `uata`.`tablero_idtablero`))) join `nivelusuario` `nu` on((`nu`.`idnivelUsuario` = `uata`.`idnivelUsuario`))) where (`nu`.`idnivelUsuario` = 1) ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vistatablero`
--- (Véase abajo para la vista actual)
+-- Estructura para la vista `checkbox_tareas`
 --
-DROP VIEW IF EXISTS `vistatablero`;
-CREATE TABLE IF NOT EXISTS `vistatablero` (
-);
+DROP TABLE IF EXISTS `checkbox_tareas`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `checkbox_tareas`  AS  select `tab`.`nombre` AS `Ntablero`,`tab`.`descripcion` AS `dTblero`,`lis`.`nombre` AS `lista`,`tar`.`nombre` AS `NTAREA`,`tar`.`descripcion` AS `DTAREA`,`tar`.`fechaCreacion` AS `fechaCreacion`,`tar`.`fechaMaxima` AS `fechaMaxima`,`ex`.`nombre` AS `ENOMBRE`,`cb`.`descripcion` AS `CHE` from (((((`tablero` `tab` join `listas` `lis` on((`lis`.`tablero_idtablero` = `tab`.`idtablero`))) join `tareas` `tar` on((`tar`.`listas_idlistas` = `lis`.`idlistas`))) join `tipotablero` `tt` on((`tt`.`idtablero` = `tab`.`tipoTablero_idtablero`))) join `checkbox` `cb` on((`cb`.`tareas_idtareas` = `tar`.`idtareas`))) join `exigibilidad` `ex` on((`ex`.`idexigibilidad` = `tar`.`exigibilidad_idexigibilidad`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vtareas`
--- (Véase abajo para la vista actual)
+-- Estructura para la vista `evaluacionhecha`
 --
-DROP VIEW IF EXISTS `vtareas`;
-CREATE TABLE IF NOT EXISTS `vtareas` (
-`Ntablero` varchar(100)
-,`dTblero` varchar(10000)
-,`lista` varchar(100)
-,`NTAREA` varchar(40)
-,`DTAREA` varchar(1000)
-,`fechaCreacion` datetime
-,`fechaMaxima` datetime
-,`ENOMBRE` varchar(40)
-,`CHE` varchar(10000)
-);
+DROP TABLE IF EXISTS `evaluacionhecha`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `evaluacionhecha`  AS  select `eva`.`descripcion` AS `descripcion`,`eva`.`fechaElaborada` AS `fechaElaborada`,`eva`.`puntosDados` AS `puntosDados`,`eva`.`puntosMaximos` AS `puntosMaximos`,((`eva`.`puntosDados` / `eva`.`puntosMaximos`) * 100) AS `porcentajeObtenido`,concat('apodo del usuario:  ',`us`.`nombreUsuario`,'   nombre:  ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `evaluado`,concat('apodo del usuario:  ',`evaluador`.`nombreUsuario`,'   nombre:  ',`evaluador`.`Pnombre`,' ',`evaluador`.`Papellido`) AS `evaluador` from ((((`evaluacion` `eva` join `evaluaciondesempenio` `ed` on((`ed`.`evaluacion_idevaluacion` = `eva`.`idevaluacion`))) join `buzonnotificaciones` `bn` on((`bn`.`idbuzon` = `ed`.`notificacion_idnotificacion`))) join `usuario` `us` on((`us`.`idusuario` = `bn`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from (`usuario` `us` join `evaluacion` `eva` on((`eva`.`usuario_idusuario` = `us`.`idusuario`)))) `evaluador` on((`evaluador`.`idusuario` = `eva`.`usuario_idusuario`))) ;
 
 -- --------------------------------------------------------
 
@@ -1022,11 +1101,11 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `mensajeenviados`
+-- Estructura para la vista `mensajesenviados`
 --
-DROP TABLE IF EXISTS `mensajeenviados`;
+DROP TABLE IF EXISTS `mensajesenviados`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `mensajeenviados`  AS  select `men`.`textoMensaje` AS `textoMensaje`,`men`.`fechaMensaje` AS `fechaMensaje`,concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,'  ',`us`.`Papellido`) AS `envia`,concat(`usres`.`nombreUsuario`,'  ',`usres`.`Pnombre`,'  ',`usres`.`Papellido`) AS `resive` from (((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_IDBM_ENVIA`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from ((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_idBM_RESIVE`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`)))) `usres` on((`usres`.`idusuario` = `men`.`BM_idBM_RESIVE`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `mensajesenviados`  AS  select `men`.`textoMensaje` AS `textoMensaje`,`men`.`fechaMensaje` AS `fechaMensaje`,concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,'  ',`us`.`Papellido`) AS `envia`,concat(`usres`.`nombreUsuario`,'  ',`usres`.`Pnombre`,'  ',`usres`.`Papellido`) AS `resive` from (((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_IDBM_ENVIA`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from ((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_idBM_RESIVE`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`)))) `usres` on((`usres`.`idusuario` = `men`.`BM_idBM_RESIVE`))) ;
 
 -- --------------------------------------------------------
 
@@ -1058,6 +1137,15 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
+-- Estructura para la vista `privilegiosdeusuario`
+--
+DROP TABLE IF EXISTS `privilegiosdeusuario`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `privilegiosdeusuario`  AS  select concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `apodo_nombre`,`tab`.`nombre` AS `nombre_tablero`,`nu`.`descripcion` AS `descripcion` from (((`uatablero` `uata` join `usuario` `us` on((`us`.`idusuario` = `uata`.`usuario_idusuario`))) join `tablero` `tab` on((`tab`.`idtablero` = `uata`.`tablero_idtablero`))) join `nivelusuario` `nu` on((`nu`.`idnivelUsuario` = `uata`.`idnivelUsuario`))) ;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura para la vista `tareascreada`
 --
 DROP TABLE IF EXISTS `tareascreada`;
@@ -1072,33 +1160,6 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `tareas_estad_asignados`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `tareas_estad_asignados`  AS  select `tar`.`nombre` AS `tarea`,`tab`.`nombre` AS `nombre_tablero`,`lis`.`nombre` AS `nombre`,`us`.`nombreUsuario` AS `nombreUsuario` from (((((`uatarea` `uata` join `uatablero` `uat` on((`uat`.`idproyectoAsignado` = `uata`.`UATablero_idUATablero`))) join `tablero` `tab` on((`tab`.`idtablero` = `uat`.`tablero_idtablero`))) join `listas` `lis` on((`lis`.`tablero_idtablero` = `tab`.`idtablero`))) join `tareas` `tar` on((`tar`.`idtareas` = `uata`.`tarea_idtarea`))) join `usuario` `us` on((`us`.`idusuario` = `uat`.`usuario_idusuario`))) ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `usuarioptablero`
---
-DROP TABLE IF EXISTS `usuarioptablero`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `usuarioptablero`  AS  select `pa`.`tablero_idtablero` AS `tablero_idtablero`,count(0) AS `COUNT(*)` from `proyectoasignado` `pa` group by `pa`.`tablero_idtablero` ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `vistatablero`
---
-DROP TABLE IF EXISTS `vistatablero`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vistatablero`  AS  select `us`.`nombreUsuario` AS `alias`,((`us`.`Pnombre` + ' ') + `us`.`Snombre`) AS `nombre`,`pais`.`nombre` AS `pais`,`us`.`fechaNacimiento` AS `fechaNacimiento`,`tab`.`nombre` AS `nombreTablero`,`tab`.`descripcion` AS `descripcion`,`tt`.`nombre` AS `tipo` from ((((`tablero` `tab` join `proyectoasignado` `pa` on((`pa`.`tablero_idtablero` = `tab`.`idtablero`))) join `usuario` `us` on((`us`.`idusuario` = `pa`.`usuario_idusuario`))) join `pais` on((`pais`.`idpais` = `us`.`pais_idpais`))) join `tipotablero` `tt` on((`tt`.`idtablero` = `tab`.`tipoTablero_idtablero`))) ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `vtareas`
---
-DROP TABLE IF EXISTS `vtareas`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vtareas`  AS  select `tab`.`nombre` AS `Ntablero`,`tab`.`descripcion` AS `dTblero`,`lis`.`nombre` AS `lista`,`tar`.`nombre` AS `NTAREA`,`tar`.`descripcion` AS `DTAREA`,`tar`.`fechaCreacion` AS `fechaCreacion`,`tar`.`fechaMaxima` AS `fechaMaxima`,`ex`.`nombre` AS `ENOMBRE`,`cb`.`descripcion` AS `CHE` from (((((`tablero` `tab` join `listas` `lis` on((`lis`.`tablero_idtablero` = `tab`.`idtablero`))) join `tareas` `tar` on((`tar`.`listas_idlistas` = `lis`.`idlistas`))) join `tipotablero` `tt` on((`tt`.`idtablero` = `tab`.`tipoTablero_idtablero`))) join `checkbox` `cb` on((`cb`.`tareas_idtareas` = `tar`.`idtareas`))) join `exigibilidad` `ex` on((`ex`.`idexigibilidad` = `tar`.`exigibilidad_idexigibilidad`))) ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
