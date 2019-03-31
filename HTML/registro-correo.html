@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>plagio Deezer - Streaming de música | Probar Flow. Descargar y escuchar música gratis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" type="text/css"  href="css/estilo.css" /> -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/deezer-icon.ico">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/estilo.css">
+
+</head>
+<!-- pagina para creacion de una nueva cuenta -->
+
+<body>
+
+    <!-- primer bloque -->
+    <nav class="navbar navbar-light bg-light navbar navbar-expand-md">
+
+      <!--  <div style="padding-left: 100px" class="col-5 col-sm-0 col-md-2 col-lg- col-xl-">
+            <a href="index.php">
+                <img src="img/registro/Deezer-nav.png" style="height: 30px;width: 125px">
+            </a>
+        </div>-->
+
+        <div id="bloque-ofertas" class="col-2 col-md-6  col-lg- col-xl-">
+            <a href="#"><button id="txt-oferta"><h4>Bienvenidos a MaKe</h4></button></a>
+        </div>
+
+        <div class="collapse navbar-collapse col-md-4 col-lg- col-xl-">
+            <a href="conectarse-email.html"><button id="boton-nav-1" class="btn btn-outline-primary ">Ingresar</button></a>
+            <a href="registro-correo.html"><button id="boton-nav-2" class="btn btn-primary btm btm "> registrarse </button></a>
+        </div>
+
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+    </nav>
+
+    <!-- fin del nav -->
+
+    <!-- segundo bloque de pagina de registro -->
+    <div id="div">
+        <div id="div1-1">
+            <div id="div1-1-1">
+                <div id="div1-1-1-1">
+                    <h1 id="header"> ¿Quiere organizarte mejor?</h1>
+                    <div>
+
+                        <center>
+                           <!-- <div>
+                                <a href="https://es-la.facebook.com/">
+                                    <button id="btm-f" class="btn btn-primary">
+                                        <img src="img/registro/facebook.ico " style="height: 20px;width: 20px"> facebook
+                                    </button>
+                                </a>
+                                <a href="https://www.google.hn/"><button id="btm-g" class="btn btn-light">
+                                        <img src="img/registro/google.png " style="height: 20px;width: 20px ;"><p style="margin-left: 20px;display: inline">google</p>
+                                    </button></a>
+                            </div><br>-->
+                            <!-- bloque de  ingreso informacion -->
+                            <input id="correo-electronico" class="diseno" type="text" placeholder="Correo electronico">
+                            <span class="campovacio" id="campovacio-c1">Ingrese un correo valido</span><br>
+                            <input id="nombre-usuario" class="diseno" type="text" placeholder="nombre de usuario">
+                            <span class="campovacio" id="campovacio-c2">Ingrese un usuario</span><br>
+                            <input id="contraseña-usuario" class="diseno" type="password" placeholder="contraseña">
+                            <span class="campovacio" id="campovacio-c3">Ingrese una contraseña</span><br>
+                        </center>
+                        <select id="select-genero">
+                            <option>sexo</option>
+                            <option>Masculino</option>
+                            <option>femenino</option>
+                        </select>
+
+                        <select id="select-edad">
+                            <option>edad</option>
+                            <option>18</option>
+                            <option>19</option>
+                            <option>20</option>
+                            <option>25</option>
+                            <option>26</option>
+                            <option>27</option>
+                            <option>28</option>
+                            <option>30</option>
+                        </select>
+                        <div class="row col-md-12">
+                            <span class=" campovacio col-7" id="campovacio-c4" style="text-align: left">
+                                por favor seleciona <br> &nbsp &nbsp &nbsp &nbsp tu sexo
+                            </span>
+                            <span class=" campovacio col-5" id="campovacio-c5">
+                                por favor seleciona <br>tu edad </span>
+                        </div>
+
+                        <div id="txt-btm-rosado" class="campovacio">por favor rellenar todo los campos</div><br>
+                        <!-- fin del bloque -->
+                        <button id="btn-enviar-correo" class="boton-rosado boton-rosado-color-cambio" onclick="guardar();">
+                            <p> Registrarse </p>
+                        </button><br><br>
+                        <!--<a href="Registro-numero.html"><p>deseas registrate con tu numero ></p></a>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- pie de mi pagina  
+
+    <footer class="row" style="overflow-x: hidden">
+        <div id="deezer-logo-footer" class="col-md-4">
+            <a href="html-1.html">
+                <img src="img/registro/deezer2.png" style="height: 40px;
+                    width: 181px;   ">
+            </a>
+        </div>
+
+        <div class="col-md-8" style="padding-top: 30px">
+            <table id="table-footer">
+                <tr>
+                    <th>Deezer
+                        </thead>
+                        <th>¿Quien eres?
+                            </thead>
+                            <th>¿Quienes somos?
+                                </thead>
+                                <th>Legal
+                                    </thead>
+                </tr>
+                <tr>
+                    <td>ofertas</td>
+                    <td>sellos y artistas</td>
+                    <td>quienes somos</td>
+                    <td>condiciones generales de uso</td>
+                </tr>
+                <tr>
+                    <td>ventajs</td>
+                    <td>desarolladores</td>
+                    <td>ofertas de empleo</td>
+                    <td>datos personales y cokies</td>
+                </tr>
+                <tr>
+                    <td>explorar los canales</td>
+                    <td>presna</td>
+                    <td></td>
+                    <td>avisos legales</td>
+                </tr>
+                <tr>
+                    <td>dispositivos</td>
+                    <td></td>
+                    <td></td>
+                    <td>ajustes de privacidad</td>
+                </tr>
+                <tr>
+                    <td>blog</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>ayuda</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+
+        </div>
+    </footer>-->
+    <!-- java script -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
+
+<!-- Hecho por Kenny Molina -->
