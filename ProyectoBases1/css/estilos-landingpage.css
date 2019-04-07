@@ -1,0 +1,310 @@
+/* ------------------------- bloque uno --------------------------------------------- */
+#bloque1{
+    background-image: url(../img/img.jpg);
+    height: 700px;
+    padding: 200px;
+    background-size: cover;
+    background-position: 50%;
+}
+
+@media only screen and (max-width: 800px){
+    #bloque1{
+        padding: 100px 0px 0px 0px;
+    height: 567px;
+    }
+}
+
+/* ------------------ bloque dos --------------------------------------------------*/
+
+#bloque2{
+    height: 1394px;
+    background-image: url(../img/bloquedos.jpg);
+    background-repeat: no-repeat;
+    background-position-x: right;
+    background-position-y: bottom;
+}
+#imagen-bloque-dos{
+    top: 600px;
+    position: absolute;
+}
+@media only screen and (max-width: 800px){
+    #imagen-bloque-dos{
+        display: none;
+    }
+}
+#txt-landin-1{
+    width: 470px;
+    margin-left: 582px;
+    margin-right: 0px;
+    margin-top: 150px;
+}
+@media only screen and (max-width: 800px){
+    #txt-landin-1{
+        margin-left: 0px !important;
+        text-align: center;
+    }
+}
+@media only screen and (max-width: 800px){
+    #texto-bloque2{
+        width:unset !important;
+    }
+}
+#txt-landin-2{
+    width: 600px;
+    margin-top: 300px;
+    margin-left: 100px;
+}
+@media only screen and (max-width: 1000px){
+    #p-txt-landin-2{
+        width:unset !important;
+    }
+}
+@media screen and (max-width: 1000px){
+    #txt-landin-2{
+        margin: 0px !important;
+        width: 335px;
+        text-align: center;
+    }
+}
+
+@media only screen and (max-width: 800px){
+    #bloque2-texto-1{
+        height: 430px;
+    }
+}
+
+@media only screen and (max-width: 800px){
+    #bloque2{
+        background-size: 800px;
+    }
+}
+/* ------------------- bloque tres ---- */
+#div-bloque-tres{
+    background-image: url(../img/bloquetres.jpg) ;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 50%;
+    height: 800px;
+    text-align: center;
+    padding: 200px;
+}
+@media only screen and (max-width: 800px){
+    #div-bloque-tres{
+        padding: 267px 0px 0px 0px;
+        height: 670px;
+    }
+}
+
+/********************************** bloque especial *****************************************/
+.btm-blo-esp{
+    border: none;
+    background-color: white;
+    font-size: 25px;
+    font-weight: 700;
+    margin-right: 30px;
+    height: 40px;
+            }
+.btm-blo-esp:hover{
+    border-bottom: solid;
+    border-bottom-color: #FEB50D; 
+}            
+#texto-bloque-especial{
+    padding-top: 200px;
+    width: 400px;
+    font-size: 20px;
+}
+
+ #circuloamarillo{
+    position: absolute;
+    margin-left: 500px;
+    margin-top: 180px;
+    height: 860px;
+    width: 860px;
+    background-color: #FEB50D;
+    border-radius: 50%;
+ }
+ #imagen-bloque-amarillo{
+     margin-left: 250px;
+     margin-bottom: 300px
+ }
+ #celular-bloque-especial{
+    background-image: url(../img/celular-bloque-especial.png);
+    height: 500px;
+    width: 300px;
+    margin-left: 300px;
+    background-size: 300px;
+    padding-top: 69px;
+ }
+ #pantalla-bloque-especial{
+    background-image: url(../img/pantalla-bloque-especial.jpg);
+    background-size: 100%;
+    height: 383px;
+    width: 266px;
+    background-repeat: no-repeat;
+    margin-left: 18px;
+ }
+ /*       ----------    bloque cuatro           -----------------     */
+#bloque-cuatro{
+    background-image: url(../img/imagen3.jpg);
+    background-position: 50%;
+    background-size: cover;
+    color: white;
+    position: relative;
+    font-size: 20px;
+}
+@media only screen and (max-width: 760px){
+    #bloque-cuatro{
+        background-image: none !important;
+        background-color: white;
+        color: black;
+        text-align: center;
+        font-weight: 200;
+    }
+}
+#div-4-1{
+    padding: 0px 124px 0px 124px;
+}
+@media only screen and (max-width: 760px){
+    #div-4-1{
+        padding: unset;
+    }
+}
+#div-texto-bloque4{
+    max-width: 410px;
+    padding: 150px 0 150px;
+    margin-left: 50%;
+}
+@media only screen and (max-width: 760px){
+    #div-texto-bloque4{
+        margin: unset;
+        text-align: center;
+        padding: 50px 0px 50px 0px;
+        max-width: unset;
+    }
+}
+
+#siempre-contigo{
+    padding: 0 0 20px;
+}
+@media only screen and (max-width: 760px){
+    #siempre-contigo{
+        color: #03608A
+    }
+}
+
+
+.boton-azul{
+    width: 200px;
+    height: 50px;
+    border-radius: 35px;
+    background-color: #2692b7;
+    border-color: #2692b7;
+    font-size: 20px;
+    color:white;
+    border: none
+}
+/* ********************************* bloque cinco********************************************/
+#bloquecinco
+{
+    background-color: #03608A;
+    padding: 20px 200px 20px 200px;
+}
+@media only screen and (max-width: 760px){
+    #bloquecinco{
+        padding: unset !important;
+    }
+}
+.imagenes-bloque5{
+    padding: 30px 10px 30px 10px; 
+}
+@media only screen and (max-width: 760px){
+    .imagenes-bloque5{
+        padding: 30px 60px 0px 0px;
+    }
+}
+
+
+
+@media screen and (min-width:4500px){
+    #bloquecinco{
+        padding: 20px 2000px 20px 2000px;
+    }
+}
+
+/*************************************************** bloque seis ***************************/
+#secion-6{
+    padding-bottom: 100px;
+    padding-top: 50px;
+    text-align: center;
+    background-color: white;
+}
+@media screen and (min-width:3000px){
+    #div-bloque-6-datos{
+        margin-left:  2000px;
+        
+    }
+}
+/********************************** bloque 7 ***********************************************/
+@media (max-width: 1559px) and (min-width: 1160px){
+    .contenedor-7{
+        width: 1050px;
+    }
+}
+
+/********************************** bloque 8 *****************************************/
+#seccion2{
+    background-repeat: no-repeat;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 1076px;
+    text-align: center;
+}
+@media (max-width: 767px)
+{
+.contenedor {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+}
+.imagen3
+{
+    height: 1024px;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size:cover
+}
+
+.lista
+{
+    display: inline-block;
+    padding-bottom: 50px;
+    padding-top: 20px;
+    width: 100%;
+}
+.tablas
+{
+    background-color: #fff;
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,.11);
+    color: #32323d;
+    display: inline-block;
+    height: 500px;
+    margin-left: 6px;
+    min-width: 260px;
+    padding: 25px 25px 40px;
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    width: 25%;
+}
+.texto
+{
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 30px;
+}
+
+
+.unlogged-container {
+    width: 1050px;
+}

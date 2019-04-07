@@ -1,0 +1,63 @@
+CREATE PROCEDURE creacionUsuario (
+	IN ppCorreo VARCHAR(1000),
+	IN ppPnombre varchar(50),
+    IN ppsnombre varchar(50),
+    IN ppPapellido varchar(50),
+	IN ppSapellido varchar(50),
+    IN ppContrasena varchar(50),
+    IN pdNacimiento date,
+    IN pnPais INT,
+    OUT pnCodigoSalida INT,
+    OUT ppMensajeSalida varchar(500)
+)
+sp: BEGIN 
+	DECLARE vnConteo INT;
+    DECLARE vpMensajeSalida varchar(500);
+    
+    
+    /*****comprobacion de que los campos no esten vacios*/
+    IF ppCorreo='' AND ppCorreo IS null THEN
+    	SET vpMensajeSalida='correo';
+    END IF;
+	
+    IF ppPnombre='' AND ppPnombre IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'primer nombre');
+    END IF;
+    
+    
+    IF ppsnombre='' AND ppsnombre IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo nombre');
+    END IF;
+    
+    
+    IF ppPapellido='' AND ppPapellido IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo apellido');
+    END IF;
+    
+    
+    IF ppSapellido='' AND ppSapellido IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo apellido');
+    END IF;
+    
+    
+    IF ppContrasena='' AND ppContrasena IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'contrasena');
+    END IF;
+    
+    
+    IF pdNacimiento='' AND pdNacimiento IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'fecha nacimiento');
+    END IF;
+    
+    
+    IF pnPais='' AND pnPais IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'pais');
+    END IF;
+    
+    IF vpMensajeSalida<>'' THEN
+    SET	pnCodigoSalida=0; 
+    SET ppMensajeSalida=vpMensajeSalida;
+   	LEAVE sp; 	
+    END IF;
+    
+END $$
