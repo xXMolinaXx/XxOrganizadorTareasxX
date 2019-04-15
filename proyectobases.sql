@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 24-03-2019 a las 21:05:13
+-- Tiempo de generación: 15-04-2019 a las 19:26:46
 -- Versión del servidor: 5.7.21
 -- Versión de PHP: 5.6.35
 
@@ -22,18 +22,375 @@ SET time_zone = "+00:00";
 -- Base de datos: `proyectobases`
 --
 
--- --------------------------------------------------------
+DELIMITER $$
+--
+-- Procedimientos
+--
+DROP PROCEDURE IF EXISTS `AsignarUsuarioTarea`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AsignarUsuarioTarea` (IN `pnIdusuario` INT, IN `pnIdTarea` INT, OUT `codigo` INT, OUT `mensaje` VARCHAR(1000))  sp: BEGIN
+    DECLARE vnNumero int;
+    DECLARE vcMensaje varchar(1000);
+    SET vcMensaje='';
 
---
--- Estructura Stand-in para la vista `administradores`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `administradores`;
-CREATE TABLE IF NOT EXISTS `administradores` (
-`apodo_nombre` varchar(182)
-,`nombre_tablero` varchar(100)
-,`descripcion` varchar(20)
-);
+    IF pnIdusuario='' AND pnIdusuario is NULL THEN
+        SET vcMensaje='id usuario';
+    END IF;
+    
+    
+    IF pnIdTarea='' AND pnIdTarea is NULL THEN
+        SET vcMensaje=concat(vcMensaje,', id tarea');
+    END IF;
+
+    IF vcMensaje<>'' THEN
+        SET codigo=0;
+        SET mensaje=concat('faltan estos parametros:',vcMensaje);
+        leave sp;
+    END IF;
+
+    SELECT COUNT(*) INTO vnNumero FROM uaproyecto aup
+    INNER JOIN proyecto pro on pro.idtablero=aup.tablero_idtablero
+    INNER JOIN listas on listas.tablero_idtablero=pro.idtablero
+    INNER JOIN tareas on tareas.listas_idlistas=listas.idlistas
+    WHERE aup.usuario_idusuario=pnIdusuario AND  tareas.idtareas=pnIdTarea ;
+
+    IF vnNumero=0 THEN
+        SET codigo=0;
+        SET mensaje='el id de usuario no esta en este proyecto';
+        leave sp;
+    END IF;
+
+        UPDATE `tareas` SET `UATablero_asignados` =  pnIdusuario WHERE `tareas`.`idtareas` = pnIdTarea;
+
+    SET codigo=1;
+    SET mensaje='usuario asignado exitosamente';
+    leave sp;
+    
+
+end$$
+
+DROP PROCEDURE IF EXISTS `CreacionLista`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `CreacionLista` (IN `pcNombre` VARCHAR(50), IN `pnproyecto` INT, OUT `codigoMensaje` INT, OUT `Mensaje` VARCHAR(1000))  sp: BEGIN
+    DECLARE vnConteo INT;
+    DECLARE vcMensaje varchar(500);
+    set vcMensaje='';
+
+   IF pcNombre='' and pcNombre is null THEN
+    SET vcMensaje='nombre';
+   END IF; 
+
+   IF pnproyecto='' and pnproyecto is null THEN
+    SET vcMensaje=concat(vcMensaje,',íd proyecto');
+   END IF; 
+
+   IF vcMensaje<>'' THEN
+        set codigoMensaje=0;
+        set Mensaje=concat('faltan estos campos', vcMensaje  );
+        LEAVE SP;
+   END IF;
+
+    SELECT COUNT(*) INTO vnConteo  FROM proyecto pro
+    WHERE pro.idtablero=pnproyecto;
+
+    IF vnConteo=0 THEN
+      set codigoMensaje=0;
+        set Mensaje='NO EXISTE EL PROYECOT';
+        LEAVE SP;
+    END IF;
+
+    INSERT INTO `listas` ( `nombre`, `tablero_idtablero`) 
+    VALUES (pcNombre ,pnproyecto);
+
+    set codigoMensaje=1;
+        set Mensaje='LISTA CREADA EXITOSAMENTE';
+        LEAVE SP;
+end$$
+
+DROP PROCEDURE IF EXISTS `CreacionProyecto`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `CreacionProyecto` (IN `pcNombre` VARCHAR(50), IN `pcDescripcion` VARCHAR(50), IN `pnIdusuario` INT, OUT `pncodigo` INT, OUT `pcMensaje` VARCHAR(500))  sp: BEGIN
+	DECLARE vnConteo INT;
+    DECLARE vcMensaje varchar(1000);
+    SET vcMensaje='';
+
+
+	IF  pcNombre='' AND  pcNombre is null THEN
+        SET vcMensaje='nombre proyecto';
+    END IF;
+
+    IF pnIdusuario='' AND pnIdusuario IS NULL THEN
+        SET vcMensaje=concat(vcMensaje,',id usuario');
+    END IF;
+
+    IF vcMensaje<>'' THEN
+        set pncodigo=0;
+        SET pnIdusuario=concat('faltan estos parametros: ',vcMensaje);
+        leave sp;
+    END IF;
+
+
+    INSERT INTO proyecto ( nombre, descripcion, tipoTablero_idtablero) 
+    VALUES (pcNombre,pcDescripcion,2);
+
+    SELECT MAX(pro.idtablero) INTO vnConteo  FROM proyecto pro;
+
+    INSERT INTO `listas` ( `nombre`, `tablero_idtablero`) VALUES ('en espera', vnConteo);
+    INSERT INTO `listas` ( `nombre`, `tablero_idtablero`) VALUES ('terminadas', vnConteo);
+
+    INSERT INTO `uaproyecto` ( `usuario_idusuario`, `tablero_idtablero`, `idnivelUsuario`) 
+    VALUES (pnIdusuario,vnConteo ,1);
+
+	
+    	SET pncodigo=1;
+        SET pcMensaje='insert realizado correctamente';
+
+
+END$$
+
+DROP PROCEDURE IF EXISTS `CreacionTareas`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `CreacionTareas` (IN `pcNombre` VARCHAR(50), IN `pcdescripcion` VARCHAR(1000), IN `pffechaMaxima` DATE, IN `pnExigibilidad` INT, IN `pfFechaIniciacion` DATE, IN `pnProyecto` INT, OUT `CodigoSalida` INT, OUT `MensajeSalida` VARCHAR(1000))  sp: BEGIN
+    DECLARE vnConteo,vnLista INT;
+    DECLARE vcMensaje varchar(1000);
+    SET vcMensaje='';
+
+    IF pcNombre ='' AND pcNombre IS NULL THEN
+        set vcMensaje='nombre tarea';
+    END IF;
+
+    IF pnProyecto  ='' AND pnProyecto  IS NULL THEN
+        set vcMensaje=concat(vcMensaje,'id lista');
+    END IF;
+
+    IF  vcMensaje<>'' THEN
+        SET CodigoSalida=0;
+        set MensajeSalida=concat('faltan estos parametros',vcMensaje);
+        leave sp;
+    END IF;
+
+    IF pffechaMaxima<curdate() AND pffechaMaxima<>'' AND pffechaMaxima is not null THEN
+        SET CodigoSalida=0;
+        set MensajeSalida='feccha maxima es menor que fecha de creacion';  
+        leave sp;
+    END IF;
+
+    
+    IF pfFechaIniciacion<curdate() AND pfFechaIniciacion<>'' AND pfFechaIniciacion is not null THEN
+        SET CodigoSalida=0;
+        set MensajeSalida='feccha maxima es menor que fecha de creacion';  
+        leave sp;
+    END IF;
+
+
+    SELECT MIN(lis.idlistas) INTO vnLista FROM proyecto pro
+INNER JOIN listas lis ON lis.tablero_idtablero=pro.idtablero
+WHERE pro.idtablero=pnProyecto;
+
+    INSERT INTO `tareas` ( `nombre`, `descripcion`, `fechaCreacion`, `fechaMaxima`, `exigibilidad_idexigibilidad`, `listas_idlistas`, `fechaIniciacion`)
+     VALUES ( pcNombre,pcdescripcion,curdate(), pffechaMaxima,pnExigibilidad,vnLista, pfFechaIniciacion);
+
+    SET CodigoSalida=1;
+    set MensajeSalida='tarea creada exitosamente';  
+    leave sp;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `creacionUsuario`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `creacionUsuario` (IN `ppCorreo` VARCHAR(1000), IN `ppPnombre` VARCHAR(50), IN `ppsnombre` VARCHAR(50), IN `ppPapellido` VARCHAR(50), IN `ppSapellido` VARCHAR(50), IN `ppContrasena` VARCHAR(50), IN `pdNacimiento` DATE, IN `pnPais` INT, OUT `pnCodigoSalida` INT, OUT `ppMensajeSalida` VARCHAR(500))  sp: BEGIN 
+	DECLARE vnConteo INT;
+    DECLARE vpMensajeSalida varchar(500);
+    
+    
+    /*****comprobacion de que los campos no esten vacios*/
+    IF ppCorreo='' AND ppCorreo IS null THEN
+    	SET vpMensajeSalida='correo';
+    END IF;
+	
+    IF ppPnombre='' AND ppPnombre IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'primer nombre');
+    END IF;
+    
+    
+    IF ppsnombre='' AND ppsnombre IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo nombre');
+    END IF;
+    
+    
+    IF ppPapellido='' AND ppPapellido IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo apellido');
+    END IF;
+    
+    
+    IF ppSapellido='' AND ppSapellido IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'segundo apellido');
+    END IF;
+    
+    
+    IF ppContrasena='' AND ppContrasena IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'contrasena');
+    END IF;
+    
+    
+    IF pdNacimiento='' AND pdNacimiento IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'fecha nacimiento');
+    END IF;
+    
+    
+    IF pnPais='' AND pnPais IS null THEN
+    	SET vpMensajeSalida=concat(vpMensajeSalida,'pais');
+    END IF;
+    
+    IF vpMensajeSalida<>'' THEN
+    SET	pnCodigoSalida=0; 
+    SET ppMensajeSalida=vpMensajeSalida;
+   	LEAVE sp; 	
+    END IF;
+    
+    SELECT COUNT(*) INTO vnConteo FROM usuario us
+    WHERE us.correo=ppCorreo;
+    
+    IF vnConteo=1 THEN
+    	SET pnCodigoSalida=0;
+        SET ppMensajeSalida="ya existe el correo";
+        LEAVE sp;
+    END IF;
+    
+    INSERT INTO usuario ( correo, Contrasenia, Pnombre, Snombre, Papellido, Sapellido, pais_idpais, fechaNacimiento) 
+     VALUES (ppCorreo,ppContrasena,ppPnombre,ppsnombre,ppPapellido,ppSapellido,pnPais,pdNacimiento) ;
+               
+    
+    
+    /********respuesta final de el procedimiento********/
+    SET	pnCodigoSalida=1; 
+    SET ppMensajeSalida='el proceso fue exitoso';
+    LEAVE sp;
+    
+END$$
+
+DROP PROCEDURE IF EXISTS `Crearcheckbox`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Crearcheckbox` (IN `pcDescripcion` VARCHAR(1000), IN `pnIdTarea` INT, OUT `codigo` INT, OUT `mensaje` VARCHAR(1000))  sp: BEGIN
+    DECLARE vnNumero INT;
+    DECLARE vcMensaje varchar(1000);
+    SET vcMensaje='';
+
+    IF pcDescripcion and pcDescripcion is NULL THEN
+        SET vcMensaje='descripcion';
+    END IF;
+
+    IF pnIdTarea='' and pnIdTarea is NULL THEN
+        SET vcMensaje=concat(vcMensaje,'id de tarea');
+    END IF;
+
+    IF vcMensaje<>'' THEN
+        SET codigo=0;
+        set mensaje=concat('faltan estos campos',vcMensaje);
+        leave sp;
+    END IF;
+
+    SELECT count(*) INTO vnNumero FROM tareas ta
+    WHERE ta.idtareas= pnIdTarea;
+
+    IF vnNumero=0 THEN  
+        SET codigo=0;
+        set mensaje='el id de tarea no existe';
+        leave sp; 
+    END IF;
+
+    INSERT INTO `checkbox` ( `descripcion`, `tareas_idtareas`, `fechaAsignacion`) 
+    VALUES (pcDescripcion,pnIdTarea,curdate());
+
+    SET codigo=1;
+    set mensaje='checklist agregado exitosamente';
+    leave sp;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `IngresarMake`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `IngresarMake` (IN `ppCorreo` VARCHAR(100), IN `ppContrasena` VARCHAR(50), OUT `ppMensajeSalida` VARCHAR(500), OUT `pnCodigoSalida` INT)  sp: BEGIN
+ DECLARE vnConteo,vnExiste INT;
+ DECLARE vpmensaje varchar(200);
+ 
+ 
+ 	IF ppCorreo='' AND ppCorreo IS null THEN
+    	SET vpmensaje='correo';
+    END IF;
+
+	   IF ppContrasena='' AND ppContrasena IS null THEN
+    	SET vpMensaje=concat(vpmensaje,'contrasena');
+    END IF;
+    
+    IF vpmensaje<>'' THEN
+    	SET ppMensajeSalida=concat('falta',mensajes);
+        SET pnCodigoSalida=0;
+        LEAVE sp;
+    END IF;
+    
+    SELECT COUNT(*) INTO vnExiste FROM usuario us
+	WHERE us.correo=ppCorreo AND us.Contrasenia=ppContrasena;
+	
+    IF vnExiste=0 THEN
+     SET ppMensajeSalida='no existe este usaurio';
+     SET pnCodigoSalida=0;
+     LEAVE sp;
+    END IF;
+	
+    SET ppMensajeSalida=' existe este usaurio';
+     SET pnCodigoSalida=1;
+     LEAVE sp;
+END$$
+
+DROP PROCEDURE IF EXISTS `UAProyecto`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `UAProyecto` (IN `pcCorreo` VARCHAR(50), IN `pnProyecto` INT, IN `pnNivel` INT, OUT `codigo` INT, OUT `mensaje` VARCHAR(50))  sp: BEGIN
+	DECLARE vnNumero int;
+    DECLARE vnNumero1 INT;
+    DECLARE vcMensaje varchar(50);
+    SET vcMensaje='';
+
+    IF pcCorreo='' and pcCorreo is NULL THEN    
+        SET vcMensaje='correo';
+    END IF;
+
+    IF  pnProyecto='' and  pnProyecto  is NULL THEN
+        set vcMensaje=concat(vcMensaje,'id proyecto');
+    END IF;
+
+    IF vcMensaje<>'' THEN
+        SET codigo=0;
+        SET mensaje=concat('FALTA ESTOS REQUISITOS',vcMensaje);
+        leave sp;
+    END IF;
+
+    SELECT count(*) INTO vnNumero FROM usuario us
+    WHERE us.correo=pcCorreo;
+
+    IF vnNumero=0 THEN
+        SET codigo=0;
+        SET mensaje='no existe el usuario';
+        leave sp;
+    END IF;
+
+
+    SELECT us.idusuario INTO vnNumero FROM usuario us
+    WHERE us.correo=pcCorreo;
+
+    SELECT COUNT(*) INTO vnNumero1 FROM uaproyecto uap
+    WHERE uap.usuario_idusuario=vnNumero and uap.tablero_idtablero=pnProyecto ;
+
+   IF vnNumero1>0 THEN
+        SET codigo=0;
+        SET mensaje='este usuario ya fue agregado';
+        leave sp;
+    END IF;
+
+    INSERT INTO `uaproyecto` ( `usuario_idusuario`, `tablero_idtablero`, `idnivelUsuario`) 
+    VALUES (vnNumero,pnProyecto,pnNivel);
+
+    SET codigo=1;
+    SET mensaje='usuario agregado exitosamente';
+    leave sp;
+
+
+
+end$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -126,64 +483,63 @@ CREATE TABLE IF NOT EXISTS `checkbox` (
   `idcheckbox` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id unico del archivo',
   `descripcion` varchar(10000) NOT NULL COMMENT 'son sub objetivo de una tarea',
   `tareas_idtareas` int(11) NOT NULL COMMENT 'id de la tarea',
+  `fechaAsignacion` date DEFAULT NULL,
+  `fechaCompletitud` date DEFAULT NULL,
+  `UATablero_asignado` int(11) DEFAULT NULL,
   PRIMARY KEY (`idcheckbox`),
-  KEY `FK_check` (`tareas_idtareas`)
+  KEY `FK_check` (`tareas_idtareas`),
+  KEY `UATChecbox` (`UATablero_asignado`)
 ) ENGINE=MyISAM AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `checkbox`
 --
 
-INSERT INTO `checkbox` (`idcheckbox`, `descripcion`, `tareas_idtareas`) VALUES
-(1, 'estudiar analisis de maya', 2),
-(2, 'chexkbox2', 1),
-(3, 'chexkbox2', 5),
-(4, 'chexkbox3', 2),
-(5, 'chexkbox24', 1),
-(6, 'chexkbox25', 5),
-(7, 'estudiar analisis de maya chexkbox2', 10),
-(8, 'chexkbox23', 12),
-(9, 'chexkbox2a', 12),
-(10, 'chexkbox3123', 20),
-(11, 'chexkbox24213', 1),
-(12, 'chexkbox25123123', 12),
-(13, 'estudiar analisis de maya 123123', 22),
-(14, 'chexkbox23123123', 12),
-(15, 'chexkbox21231231', 15),
-(16, 'chexkbox312312312', 20),
-(17, 'chexkbox24123131', 20),
-(18, 'chexkbox251312312', 7),
-(19, 'estudiar analisis de maya chexkbox2v 2131', 30),
-(20, 'chexkbox23', 12),
-(21, 'chexkbox2a 1 1 1 11 1', 31),
-(22, 'chexkbox3123 121212121', 29),
-(23, 'chexkbox242132112   11 1 1 11 1 ', 50),
-(24, 'chexkbox25123123 12    2323  ', 40),
-(25, 'checkbox 1', 1),
-(26, 'checkbox 2', 1),
-(27, 'checkbox 3', 1),
-(28, 'checkbox 4', 1),
-(29, 'checkbox 5', 5),
-(30, 'checkbox 6', 3),
-(31, 'checkbox 8', 2);
+INSERT INTO `checkbox` (`idcheckbox`, `descripcion`, `tareas_idtareas`, `fechaAsignacion`, `fechaCompletitud`, `UATablero_asignado`) VALUES
+(1, 'estudiar analisis de maya', 1, '2019-04-01', NULL, 1),
+(2, 'chexkbox2', 2, '2019-04-09', NULL, 2),
+(3, 'chexkbox2', 3, '2019-04-11', NULL, 3),
+(4, 'chexkbox3', 4, '2019-03-14', NULL, 4),
+(5, 'chexkbox24', 5, '2019-04-09', NULL, 5),
+(6, 'chexkbox25', 6, '2019-02-12', NULL, 6),
+(7, 'estudiar analisis de maya chexkbox2', 7, '2019-04-09', NULL, 7),
+(8, 'chexkbox23', 8, '2019-02-05', NULL, 8),
+(9, 'chexkbox2a', 9, '2019-01-15', NULL, 1),
+(10, 'chexkbox3123', 10, '2019-04-10', NULL, 2),
+(11, 'chexkbox24213', 1, '2019-04-17', NULL, 3),
+(12, 'chexkbox25123123', 2, '2019-04-18', NULL, 4),
+(13, 'estudiar analisis de maya 123123', 3, '2019-04-18', NULL, 5),
+(14, 'chexkbox23123123', 4, '2019-04-10', NULL, 6),
+(15, 'chexkbox21231231', 5, '2019-04-11', NULL, 7),
+(16, 'chexkbox312312312', 6, '2019-04-17', NULL, 8),
+(17, 'chexkbox24123131', 7, '2019-04-10', NULL, 1),
+(18, 'chexkbox251312312', 8, '2019-04-10', NULL, NULL),
+(19, 'estudiar analisis de maya chexkbox2v 2131', 9, '2019-04-17', NULL, NULL),
+(20, 'chexkbox23', 10, '2019-04-18', NULL, NULL),
+(21, 'chexkbox2a 1 1 1 11 1', 1, NULL, NULL, NULL),
+(22, 'chexkbox3123 121212121', 2, NULL, NULL, NULL),
+(23, 'chexkbox242132112   11 1 1 11 1 ', 3, NULL, NULL, NULL),
+(24, 'chexkbox25123123 12    2323  ', 4, NULL, NULL, NULL),
+(25, 'checkbox 1', 5, NULL, NULL, NULL),
+(26, 'checkbox 2', 1, NULL, NULL, NULL),
+(27, 'checkbox 3', 1, NULL, NULL, NULL),
+(28, 'checkbox 4', 1, NULL, NULL, NULL),
+(29, 'checkbox 5', 5, NULL, NULL, NULL),
+(30, 'checkbox 6', 3, NULL, NULL, NULL),
+(31, 'checkbox 8', 2, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `checkbox_tareas`
+-- Estructura Stand-in para la vista `checkboxcreadas`
 -- (Véase abajo para la vista actual)
 --
-DROP VIEW IF EXISTS `checkbox_tareas`;
-CREATE TABLE IF NOT EXISTS `checkbox_tareas` (
-`Ntablero` varchar(100)
-,`dTblero` varchar(10000)
-,`lista` varchar(100)
-,`NTAREA` varchar(40)
-,`DTAREA` varchar(1000)
-,`fechaCreacion` datetime
-,`fechaMaxima` datetime
-,`ENOMBRE` varchar(40)
-,`CHE` varchar(10000)
+DROP VIEW IF EXISTS `checkboxcreadas`;
+CREATE TABLE IF NOT EXISTS `checkboxcreadas` (
+`Nombre_tarea` varchar(40)
+,`descripcion` varchar(10000)
+,`fechaAsignacion` date
+,`concat(us.Pnombre,' ',us.Papellido)` varchar(81)
 );
 
 -- --------------------------------------------------------
@@ -306,23 +662,6 @@ INSERT INTO `evaluaciondesempenio` (`idevaluacionDesempenio`, `evaluacion_ideval
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `evaluacionhecha`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `evaluacionhecha`;
-CREATE TABLE IF NOT EXISTS `evaluacionhecha` (
-`descripcion` varchar(1000)
-,`fechaElaborada` date
-,`puntosDados` int(11)
-,`puntosMaximos` int(11)
-,`porcentajeObtenido` decimal(17,4)
-,`evaluado` varchar(213)
-,`evaluador` varchar(213)
-);
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `exigibilidad`
 --
 
@@ -355,6 +694,24 @@ CREATE TABLE IF NOT EXISTS `extrasnotas` (
   `notas_idnotas` int(11) DEFAULT NULL,
   PRIMARY KEY (`idextrasNotas`),
   KEY `FK_notas` (`notas_idnotas`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historicott`
+--
+
+DROP TABLE IF EXISTS `historicott`;
+CREATE TABLE IF NOT EXISTS `historicott` (
+  `idHistorioTT` int(11) NOT NULL AUTO_INCREMENT,
+  `fechaInicialLista` date NOT NULL,
+  `fechaFinLista` date NOT NULL,
+  `Tarea_idTarea` int(11) NOT NULL,
+  `Listas_idListas` int(11) NOT NULL,
+  PRIMARY KEY (`idHistorioTT`),
+  KEY `fk1` (`Tarea_idTarea`),
+  KEY `fk2` (`Listas_idListas`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -434,21 +791,6 @@ INSERT INTO `libreta` (`idlibreta`, `nombre`, `idcuaderno`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `libretaspusuario`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `libretaspusuario`;
-CREATE TABLE IF NOT EXISTS `libretaspusuario` (
-`idusuario` int(11)
-,`nombreUsuario` varchar(100)
-,`Pnombre` varchar(40)
-,`Papellido` varchar(40)
-,`notas_por_libretas` bigint(21)
-);
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `listas`
 --
 
@@ -459,55 +801,44 @@ CREATE TABLE IF NOT EXISTS `listas` (
   `tablero_idtablero` int(11) DEFAULT NULL,
   PRIMARY KEY (`idlistas`),
   KEY `FK_proyecto` (`tablero_idtablero`)
-) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `listas`
 --
 
 INSERT INTO `listas` (`idlistas`, `nombre`, `tablero_idtablero`) VALUES
-(1, 'creadas', 1),
-(2, 'trabajando', 1),
-(3, 'finalizadas', 1),
-(4, 'creadas', 2),
-(5, 'procesadas', 2),
-(6, 'terminadas', 2),
-(7, 'creadas', 3),
-(8, 'proceso', 3),
-(9, 'terminadas', 3),
-(10, 'creadas', 4),
-(11, 'proceso', 4),
-(12, 'terminadas', 4),
-(13, 'creadas', 5),
-(14, 'proceso', 5),
-(15, 'terminadas', 5),
-(16, 'creadas', 6),
-(17, 'proceso', 6),
-(18, 'terminadas', 6),
-(19, 'creadas', 7),
-(20, 'proceso', 7),
-(21, 'terminadas', 8),
-(22, 'creadas', 9),
-(23, 'trabajando', 9),
-(24, 'finalizadas', 9),
-(25, 'creadas', 10),
-(26, 'procesadas', 10),
-(27, 'terminadas', 10),
-(28, 'creadas', 11),
-(29, 'proceso', 11),
-(30, 'terminadas', 11),
-(31, 'creadas', 12),
-(32, 'proceso', 12),
-(33, 'terminadas', 12),
-(34, 'creadas', 13),
-(35, 'proceso', 13),
-(36, 'terminadas', 13),
-(37, 'creadas', 14),
-(38, 'proceso', 14),
-(39, 'terminadas', 14),
-(40, 'creadas', 15),
-(41, 'proceso', 15),
-(42, 'terminadas', 15);
+(1, 'ESPERA', 1),
+(2, 'PROCESO', 1),
+(3, 'terminadas', 1),
+(4, 'en espera', 19),
+(5, 'terminadas', 19);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `listascreadas`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `listascreadas`;
+CREATE TABLE IF NOT EXISTS `listascreadas` (
+`proyecto` varchar(100)
+,`Nlista` varchar(100)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `mensajeenviado`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `mensajeenviado`;
+CREATE TABLE IF NOT EXISTS `mensajeenviado` (
+`usuario_envia` varchar(81)
+,`textoMensaje` varchar(10000)
+,`fechaMensaje` date
+,`usuario_Resive` varchar(82)
+);
 
 -- --------------------------------------------------------
 
@@ -553,15 +884,13 @@ INSERT INTO `mensajes` (`idmensajes`, `textoMensaje`, `fechaMensaje`, `BM_idBM_R
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `mensajesenviados`
+-- Estructura Stand-in para la vista `nivelesusuarioexistentes`
 -- (Véase abajo para la vista actual)
 --
-DROP VIEW IF EXISTS `mensajesenviados`;
-CREATE TABLE IF NOT EXISTS `mensajesenviados` (
-`textoMensaje` varchar(10000)
-,`fechaMensaje` date
-,`envia` varchar(183)
-,`resive` varchar(184)
+DROP VIEW IF EXISTS `nivelesusuarioexistentes`;
+CREATE TABLE IF NOT EXISTS `nivelesusuarioexistentes` (
+`idnivelUsuario` int(11)
+,`descripcion` varchar(20)
 );
 
 -- --------------------------------------------------------
@@ -582,25 +911,9 @@ CREATE TABLE IF NOT EXISTS `nivelusuario` (
 --
 
 INSERT INTO `nivelusuario` (`idnivelUsuario`, `descripcion`) VALUES
-(1, 'dios del olimpo'),
-(2, 'semi dios'),
-(3, 'mortal');
-
--- --------------------------------------------------------
-
---
--- Estructura Stand-in para la vista `nnotasenlibretas`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `nnotasenlibretas`;
-CREATE TABLE IF NOT EXISTS `nnotasenlibretas` (
-`idusuario` int(11)
-,`nombreUsuario` varchar(100)
-,`Pnombre` varchar(40)
-,`Papellido` varchar(40)
-,`nombre` varchar(40)
-,`notas_por_libretas` bigint(21)
-);
+(1, 'privilegiado'),
+(2, 'semi-privilegiado'),
+(3, 'no-privilegiado');
 
 -- --------------------------------------------------------
 
@@ -638,21 +951,6 @@ INSERT INTO `notas` (`idnotas`, `texto`, `libreta_idlibreta`) VALUES
 (14, 'hoalalalalalla', 8),
 (15, 'vive la vida de pablo neruda', 5),
 (16, 'assdasdadadasd', 12);
-
--- --------------------------------------------------------
-
---
--- Estructura Stand-in para la vista `notaslibretas`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `notaslibretas`;
-CREATE TABLE IF NOT EXISTS `notaslibretas` (
-`nombreUsuario` varchar(100)
-,`Pnombre` varchar(40)
-,`Papellido` varchar(40)
-,`Nombre_Libreta` varchar(40)
-,`Nota_libreta` varchar(1000)
-);
 
 -- --------------------------------------------------------
 
@@ -700,7 +998,7 @@ CREATE TABLE IF NOT EXISTS `pais` (
   `idpais` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(40) DEFAULT NULL COMMENT 'nombre de algun pais',
   PRIMARY KEY (`idpais`)
-) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `pais`
@@ -722,20 +1020,62 @@ INSERT INTO `pais` (`idpais`, `nombre`) VALUES
 (13, 'Belgica'),
 (14, 'japon'),
 (15, 'china'),
-(16, 'argentina');
+(16, 'argentina'),
+(17, NULL),
+(18, 'nuevo pais');
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `privilegiosdeusuario`
+-- Estructura Stand-in para la vista `paisesexistentes`
 -- (Véase abajo para la vista actual)
 --
-DROP VIEW IF EXISTS `privilegiosdeusuario`;
-CREATE TABLE IF NOT EXISTS `privilegiosdeusuario` (
-`apodo_nombre` varchar(182)
-,`nombre_tablero` varchar(100)
-,`descripcion` varchar(20)
+DROP VIEW IF EXISTS `paisesexistentes`;
+CREATE TABLE IF NOT EXISTS `paisesexistentes` (
+`idpais` int(11)
+,`nombre` varchar(40)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `proyecto`
+--
+
+DROP TABLE IF EXISTS `proyecto`;
+CREATE TABLE IF NOT EXISTS `proyecto` (
+  `idtablero` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL COMMENT 'nombre que se le da al tablero',
+  `descripcion` varchar(10000) DEFAULT NULL COMMENT 'descripcion breve de lo que se administra en este tablero',
+  `tipoTablero_idtablero` int(11) NOT NULL,
+  PRIMARY KEY (`idtablero`),
+  KEY `FK_tt` (`tipoTablero_idtablero`)
+) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `proyecto`
+--
+
+INSERT INTO `proyecto` (`idtablero`, `nombre`, `descripcion`, `tipoTablero_idtablero`) VALUES
+(1, 'I PAC UNAH', 'ORGANIZARE TODAS LA TAREAS DE MI PAC', 1),
+(2, 'II PAC UNAH', 'ORGANIZARE TODo', 2),
+(3, 'III PAC UNAH', 'HOLA PAC', 1),
+(4, 'PROYECTO DE POO', 'asignaremos las tareas de proyecto de poo', 3),
+(5, 'proyecto BD', 'organizaremos las tareas de BD', 3),
+(6, 'Ventas de chocolates', 'organizaremos las tareas para hacer una venta de chocolates', 2),
+(7, 'comida', 'aprenderemos hacer lasagna', 1),
+(8, 'actividad del dia del padre', 'nos organizaremos para celebrarle una actividad a mi papa', 2),
+(9, 'Construcion', 'se dara todas las ordenes de la construcions a traves de este medio y se requiere constante muestra de procesos', 2),
+(10, 'probando base de datos', 'prueba 1', 1),
+(11, 'probando base de datos', 'prueba 2', 3),
+(12, 'asdasd', 'dasdasd', 2),
+(13, 'asdasdasd', 'asdasdas', 1),
+(14, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'ssssssssssssssssssssssssssss', 3),
+(15, 'creacion de anime', 'se asignaran trabajos en esta plataforma', 2),
+(16, ' plataforma de streaming de footbal', 'se creara una plataforma para el streaming atraves de la red de las ligas mas importante de mundo', 3),
+(17, 'prueba proyecto', 'creacion de un proyecto con procedimietnos almacenados', 2),
+(18, 'PA prueba', ' descripcion PA prueba', 2),
+(19, 'Nuevo proyecto PA', 'Nuevo proyecto PA', 2);
 
 -- --------------------------------------------------------
 
@@ -756,44 +1096,6 @@ CREATE TABLE IF NOT EXISTS `recordatorios` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `tablero`
---
-
-DROP TABLE IF EXISTS `tablero`;
-CREATE TABLE IF NOT EXISTS `tablero` (
-  `idtablero` int(11) NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL COMMENT 'nombre que se le da al tablero',
-  `descripcion` varchar(10000) DEFAULT NULL COMMENT 'descripcion breve de lo que se administra en este tablero',
-  `tipoTablero_idtablero` int(11) NOT NULL,
-  PRIMARY KEY (`idtablero`),
-  KEY `FK_tt` (`tipoTablero_idtablero`)
-) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `tablero`
---
-
-INSERT INTO `tablero` (`idtablero`, `nombre`, `descripcion`, `tipoTablero_idtablero`) VALUES
-(1, 'I PAC UNAH', 'ORGANIZARE TODAS LA TAREAS DE MI PAC', 1),
-(2, 'II PAC UNAH', 'ORGANIZARE TODo', 2),
-(3, 'III PAC UNAH', 'HOLA PAC', 1),
-(4, 'PROYECTO DE POO', 'asignaremos las tareas de proyecto de poo', 3),
-(5, 'proyecto BD', 'organizaremos las tareas de BD', 3),
-(6, 'Ventas de chocolates', 'organizaremos las tareas para hacer una venta de chocolates', 2),
-(7, 'comida', 'aprenderemos hacer lasagna', 1),
-(8, 'actividad del dia del padre', 'nos organizaremos para celebrarle una actividad a mi papa', 2),
-(9, 'Construcion', 'se dara todas las ordenes de la construcions a traves de este medio y se requiere constante muestra de procesos', 2),
-(10, 'probando base de datos', 'prueba 1', 1),
-(11, 'probando base de datos', 'prueba 2', 3),
-(12, 'asdasd', 'dasdasd', 2),
-(13, 'asdasdasd', 'asdasdas', 1),
-(14, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'ssssssssssssssssssssssssssss', 3),
-(15, 'creacion de anime', 'se asignaran trabajos en esta plataforma', 2),
-(16, ' plataforma de streaming de footbal', 'se creara una plataforma para el streaming atraves de la red de las ligas mas importante de mundo', 3);
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `tareas`
 --
 
@@ -806,142 +1108,68 @@ CREATE TABLE IF NOT EXISTS `tareas` (
   `fechaMaxima` datetime DEFAULT NULL,
   `exigibilidad_idexigibilidad` int(11) DEFAULT NULL,
   `listas_idlistas` int(11) DEFAULT NULL,
+  `fechaIniciacion` date DEFAULT NULL,
+  `fechaTerminacion` date DEFAULT NULL,
+  `UATablero_asignados` int(11) DEFAULT NULL COMMENT 'este es el usuario al que se le encarga que se cumpla la tarea',
   PRIMARY KEY (`idtareas`),
   KEY `FK_EXI` (`exigibilidad_idexigibilidad`),
-  KEY `FK_lis` (`listas_idlistas`)
-) ENGINE=MyISAM AUTO_INCREMENT=79 DEFAULT CHARSET=latin1;
+  KEY `FK_lis` (`listas_idlistas`),
+  KEY `UATTAREA` (`UATablero_asignados`)
+) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `tareas`
 --
 
-INSERT INTO `tareas` (`idtareas`, `nombre`, `descripcion`, `fechaCreacion`, `fechaMaxima`, `exigibilidad_idexigibilidad`, `listas_idlistas`) VALUES
-(1, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 1),
-(2, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 1),
-(3, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 1),
-(4, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 2),
-(5, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
-(6, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 5),
-(7, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 7),
-(8, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 2),
-(9, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 3),
-(10, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 2),
-(11, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 1),
-(12, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 3),
-(13, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 4),
-(14, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 5),
-(15, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 1),
-(16, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 1),
-(17, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
-(18, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 2),
-(19, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 3),
-(20, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 3),
-(21, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 1),
-(22, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 2),
-(23, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 3),
-(24, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
-(25, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 1),
-(26, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
-(27, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 3),
-(28, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 1),
-(29, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 3),
-(30, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 1),
-(31, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 1),
-(32, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 2),
-(33, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
-(34, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 5),
-(35, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 7),
-(36, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 12),
-(37, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 15),
-(38, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 14),
-(39, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 22),
-(40, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 21),
-(41, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 15),
-(42, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 17),
-(43, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 1),
-(44, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 1),
-(45, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 2),
-(46, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 2),
-(47, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 2),
-(48, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 3),
-(49, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 1),
-(50, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 2),
-(51, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 3),
-(52, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 14),
-(53, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 1),
-(54, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 4),
-(55, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 5),
-(56, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
-(57, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 6),
-(58, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 6),
-(59, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 6),
-(60, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 6),
-(61, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 6),
-(62, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 5),
-(63, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 5),
-(64, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 5, 22),
-(65, 'tengo que hacer algo asdadas', 'tengo que hacer algo adasdasdasd', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 5),
-(66, 'asssdasdasdas algo algo algo', 'asdasdasd algo algo algo', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 4),
-(67, 'adsfssfg sisisisis', 'sdfsdfsdf siisisis', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 5),
-(68, 'CIRCUITO', 'TAREA DE CIRCUITOS', '2019-03-06 00:00:00', '2019-03-28 00:00:00', 1, 4),
-(69, 'estudiar capitulo 4', 'tengo que estudiar el capitulo 4 ', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 6),
-(70, 'trabajr en proyecto de bases', 'debo de crear todas las tablas de bases', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 6),
-(71, 'traer tortillas', 'tengo que ir a comprar tortilla', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 6),
-(72, 'tengo que hacer algo', 'tengo que hacer algo', '2019-03-22 00:00:00', '2019-03-30 00:00:00', 2, 6),
-(73, 'asssdasdasdas', 'asdasdasd', '2019-03-23 00:00:00', '2019-03-22 00:00:00', 1, 5),
-(74, 'adsfssfg', 'sdfsdfsdf', '2019-03-01 00:00:00', '2019-05-10 00:00:00', 2, 4),
-(75, 'CIRCUITO', 'TAREA DE CIRCUITOS asdasd', '2019-03-06 00:00:00', '2019-03-30 00:00:00', 1, 6),
-(76, 'estudiar capitulo 4 asdasdasd', 'tengo que estudiar el capitulo 4  asdasdasd', '2019-03-09 00:00:00', '2019-03-16 00:00:00', 2, 4),
-(77, 'trabajr en proyecto de bases asdadassda ', 'debo de crear todas las tablas de bases adasdasdadaa', '2019-03-09 00:00:00', '2019-03-30 00:00:00', 3, 4),
-(78, 'traer tortillas dasdasdada', 'tengo que ir a comprar tortilla asdasdasdasd', '2019-03-22 00:00:00', '2019-03-31 00:00:00', 2, 4);
+INSERT INTO `tareas` (`idtareas`, `nombre`, `descripcion`, `fechaCreacion`, `fechaMaxima`, `exigibilidad_idexigibilidad`, `listas_idlistas`, `fechaIniciacion`, `fechaTerminacion`, `UATablero_asignados`) VALUES
+(1, 'trabjar en la tarea 1', ' trabjar en la tarea 1 avanzar en esat tarea', '2019-04-01 00:00:00', '2019-04-24 00:00:00', 1, 1, '2019-04-05', NULL, 5),
+(2, 'trabjar en la tarea 2', 'trabajar en la tarea 2', '2019-03-09 00:00:00', '2019-04-02 00:00:00', 2, 1, '2019-04-04', NULL, 2),
+(3, 'tarea 3', 'tarea 3', '2019-04-01 00:00:00', '2019-04-09 00:00:00', 3, 1, '2019-04-03', NULL, 1),
+(4, 'tarea 3', 'tarea 3', '2019-03-09 00:00:00', '2019-04-25 00:00:00', 1, 1, '2019-04-04', NULL, 3),
+(5, 'trabjar en la tarea qwerty', ' trabjar en la tarea qwerty avanzar en esat tarea', '2019-04-01 00:00:00', '2019-04-24 00:00:00', 1, 1, '2019-04-05', NULL, 1),
+(6, 'trabjar en la tarea asdf', 'trabajar en la tarea asd', '2019-03-09 00:00:00', '2019-04-02 00:00:00', 2, 1, '2019-04-04', NULL, 2),
+(7, 'tarea scrubb 2', 'tarea 3', '2019-04-01 00:00:00', '2019-04-09 00:00:00', 3, 1, '2019-04-03', NULL, 1),
+(8, 'tarea suise 2', 'tarea 3', '2019-03-09 00:00:00', '2019-04-25 00:00:00', 1, 1, '2019-04-04', NULL, 3),
+(9, 'PRUEBA PA', 'PRUEBA PA', '2019-04-14 00:00:00', '2019-04-30 00:00:00', 1, 1, '2019-04-15', NULL, NULL),
+(10, 'PRUEBA PA', 'PRUENA PA', '2019-04-14 00:00:00', '2019-04-16 00:00:00', 1, 1, '2019-04-16', NULL, NULL),
+(11, 'prueba 2 pa', 'prueba 2 pa', '2019-04-14 00:00:00', '2019-04-22 00:00:00', 1, 1, '2019-04-16', NULL, NULL),
+(12, '1', '1', '2019-04-14 00:00:00', '2019-04-30 00:00:00', 1, 1, '2019-04-16', NULL, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `tareascreada`
+-- Estructura Stand-in para la vista `tareascreadas`
 -- (Véase abajo para la vista actual)
 --
-DROP VIEW IF EXISTS `tareascreada`;
-CREATE TABLE IF NOT EXISTS `tareascreada` (
-`tableroN` varchar(100)
-,`tdescripcion` varchar(10000)
-,`estado` varchar(100)
-,`tnombre` varchar(40)
-,`tadescripcion` varchar(1000)
+DROP VIEW IF EXISTS `tareascreadas`;
+CREATE TABLE IF NOT EXISTS `tareascreadas` (
+`Nombre_tarea` varchar(40)
+,`descripcion` varchar(1000)
+,`exiibilidad_nombre` varchar(40)
+,`fechaCreacion` datetime
+,`fechaMaxima` datetime
+,`nombre_lista` varchar(100)
+,`nombre_proyecto` varchar(100)
 );
 
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `tareas_estad_asignados`
--- (Véase abajo para la vista actual)
---
-DROP VIEW IF EXISTS `tareas_estad_asignados`;
-CREATE TABLE IF NOT EXISTS `tareas_estad_asignados` (
-`tarea` varchar(40)
-,`nombre_tablero` varchar(100)
-,`nombre` varchar(100)
-,`nombreUsuario` varchar(100)
-);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `tipotablero`
+-- Estructura de tabla para la tabla `tipoproyecto`
 --
 
-DROP TABLE IF EXISTS `tipotablero`;
-CREATE TABLE IF NOT EXISTS `tipotablero` (
+DROP TABLE IF EXISTS `tipoproyecto`;
+CREATE TABLE IF NOT EXISTS `tipoproyecto` (
   `idtablero` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(10000) NOT NULL,
   PRIMARY KEY (`idtablero`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
--- Volcado de datos para la tabla `tipotablero`
+-- Volcado de datos para la tabla `tipoproyecto`
 --
 
-INSERT INTO `tipotablero` (`idtablero`, `nombre`) VALUES
+INSERT INTO `tipoproyecto` (`idtablero`, `nombre`) VALUES
 (1, 'publico'),
 (2, 'privado'),
 (3, 'semi-privado');
@@ -949,11 +1177,11 @@ INSERT INTO `tipotablero` (`idtablero`, `nombre`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `uatablero`
+-- Estructura de tabla para la tabla `uaproyecto`
 --
 
-DROP TABLE IF EXISTS `uatablero`;
-CREATE TABLE IF NOT EXISTS `uatablero` (
+DROP TABLE IF EXISTS `uaproyecto`;
+CREATE TABLE IF NOT EXISTS `uaproyecto` (
   `idproyectoAsignado` int(11) NOT NULL AUTO_INCREMENT,
   `usuario_idusuario` int(11) NOT NULL,
   `tablero_idtablero` int(11) NOT NULL,
@@ -962,62 +1190,25 @@ CREATE TABLE IF NOT EXISTS `uatablero` (
   KEY `FK_usuario` (`usuario_idusuario`),
   KEY `FK_tablero` (`tablero_idtablero`),
   KEY `FK_NU` (`idnivelUsuario`)
-) ENGINE=MyISAM AUTO_INCREMENT=36 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 
 --
--- Volcado de datos para la tabla `uatablero`
+-- Volcado de datos para la tabla `uaproyecto`
 --
 
-INSERT INTO `uatablero` (`idproyectoAsignado`, `usuario_idusuario`, `tablero_idtablero`, `idnivelUsuario`) VALUES
-(1, 12, 2, 1),
-(2, 9, 1, 3),
-(3, 8, 1, 3),
-(4, 2, 2, 3),
-(5, 1, 2, 3),
-(6, 6, 1, 1),
-(7, 5, 1, 3),
-(8, 4, 1, 3),
-(9, 3, 1, 2),
-(10, 2, 1, 1),
-(11, 1, 1, 1);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `uatarea`
---
-
-DROP TABLE IF EXISTS `uatarea`;
-CREATE TABLE IF NOT EXISTS `uatarea` (
-  `tarea_idtarea` int(11) NOT NULL,
-  `UATablero_idUATablero` int(11) NOT NULL,
-  KEY `FK_uat1` (`tarea_idtarea`),
-  KEY `FK_uat2` (`UATablero_idUATablero`) USING BTREE
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `uatarea`
---
-
-INSERT INTO `uatarea` (`tarea_idtarea`, `UATablero_idUATablero`) VALUES
-(1, 1),
-(1, 2),
-(2, 1),
-(3, 2),
-(1, 5),
-(2, 5),
-(2, 3),
-(2, 3),
-(5, 5),
-(6, 6),
-(1, 5),
-(1, 6),
-(2, 5),
-(2, 6),
-(1, 7),
-(1, 7),
-(1, 8),
-(1, 8);
+INSERT INTO `uaproyecto` (`idproyectoAsignado`, `usuario_idusuario`, `tablero_idtablero`, `idnivelUsuario`) VALUES
+(9, 6, 2, 3),
+(10, 7, 2, 1),
+(14, 3, 1, 2),
+(1, 8, 1, 3),
+(2, 7, 1, 3),
+(3, 6, 1, 3),
+(4, 5, 1, 2),
+(5, 4, 1, 1),
+(6, 3, 1, 1),
+(7, 2, 1, 1),
+(8, 1, 1, 1),
+(12, 3, 19, 1);
 
 -- --------------------------------------------------------
 
@@ -1028,8 +1219,6 @@ INSERT INTO `uatarea` (`tarea_idtarea`, `UATablero_idUATablero`) VALUES
 DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE IF NOT EXISTS `usuario` (
   `idusuario` int(11) NOT NULL AUTO_INCREMENT,
-  `nombreUsuario` varchar(100) DEFAULT NULL,
-  `descripcion` varchar(500) DEFAULT NULL,
   `correo` varchar(100) NOT NULL,
   `Contrasenia` varchar(100) DEFAULT NULL,
   `Pnombre` varchar(40) DEFAULT NULL,
@@ -1040,90 +1229,61 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `fechaNacimiento` date DEFAULT NULL,
   PRIMARY KEY (`idusuario`),
   KEY `FK_Pais` (`pais_idpais`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`idusuario`, `nombreUsuario`, `descripcion`, `correo`, `Contrasenia`, `Pnombre`, `Snombre`, `Papellido`, `Sapellido`, `pais_idpais`, `fechaNacimiento`) VALUES
-(1, 'Akinator', 'Hola me gusta las matematicas y las ciencias de la computacion,veo mucho anime', 'elpapi@yahoo.com', 'asd', 'pedro', 'juan', 'valdiviezo', 'martinez', 2, '1997-12-13'),
-(2, 'asd', 'asdasdasd', 'asdafafsdfs', 'asd', 'asd', 'sadsad', 'sada', 'sadasd', 1, NULL),
-(3, 'KenJXD', 'HOLA ', 'kjmolina@live.com', 'QWERTY', 'kenny', 'jared', 'molina', 'murillo', 1, NULL),
-(4, 'BlackBeattle', 'soy blackBeatle', 'blackbeatle@unah.hn', 'qwerty', 'ronal', NULL, 'varela', 'quinchon', 10, NULL),
-(5, 'creador', 'soy io', 'blackadadasd@unah.hn', 'qwerty', 'ronal', NULL, 'varela', 'quinchon', 10, NULL),
-(6, 'KenJXD97', 'hola mundo', 'kjmolina@live.com', 'qwerty', 'kenny ', 'jared', 'molina', 'murillo', 1, NULL),
-(7, 'MaEMMA ', 'Hola', 'ma!!emma1234@yahoo.com', 'qwer', 'maria', 'emma', 'benitez', 'velazques', 1, NULL),
-(8, 'DAN', 'HOLA ME GUSTA ME GUSTAN LOS VIDEOJUEGOS ,MIS JUEGOS FAVORITOS SON KILLZONE Y METAL GEAR .AGREGAME Y TE AGREGO', 'DAN-DANI@LIVE.COM', 'ASDFG', 'DANI', 'LETO', 'MARTINEZ', 'GUEVARA', 2, NULL),
-(9, 'Rockgun', 'soy ammante de la armas de fuego', 'gun_fuckers@gmail.com', 'qwerty', 'mario', 'javier', 'castaneda', 'rodriguez', 5, '1990-12-15'),
-(10, 'THE ROCK', 'actor de hollywood', 'dawye-therock@yahoo.com', 'qweqwrwetrt', 'dawne', 'davis', 'johnson', 'black', 5, '1960-01-01'),
-(11, 'DEVI', 'hola mundo', 'devian123insali@outlook.com', 'devian', 'devian', 'monserat', 'insali', 'neveg', 6, '1997-05-18'),
-(12, 'BlackAdam', 'soy afroamerciano y me gusta el rap', 'blackadam@outlook.com', 'blacki', 'adam', NULL, 'forest', 'gump', 5, '1995-08-20'),
-(13, 'xXMolinaXx', 'hola mundo', 'molina123@gmail.com', 'qwerty', 'mario', 'javier', 'MARTINEZ', 'alvarez', 10, '1990-03-20'),
-(14, 'rubius', 'probando probando probando probando probando', 'rubius@yahoo.com', 'asdas', 'lenin', 'abdi', 'alvarez', 'alonzo', 10, '1980-05-12');
+INSERT INTO `usuario` (`idusuario`, `correo`, `Contrasenia`, `Pnombre`, `Snombre`, `Papellido`, `Sapellido`, `pais_idpais`, `fechaNacimiento`) VALUES
+(2, 'asdafafsdfs', 'asd', 'asd', 'sadsad', 'sada', 'sadasd', 1, NULL),
+(3, 'kjmolina@live.com', 'QWERTY', 'kenny', 'jared', 'molina', 'murillo', 1, NULL),
+(7, 'ma!!emma1234@yahoo.com', 'qwer', 'maria', 'emma', 'benitez', 'velazques', 1, NULL),
+(8, 'DAN-DANI@LIVE.COM', 'ASDFG', 'DANI', 'LETO', 'MARTINEZ', 'GUEVARA', 2, NULL),
+(10, 'dawye-therock@yahoo.com', 'qweqwrwetrt', 'dawne', 'davis', 'johnson', 'black', 5, '1960-01-01'),
+(11, 'devian123insali@outlook.com', 'devian', 'devian', 'monserat', 'insali', 'neveg', 6, '1997-05-18'),
+(20, '12', '1', '1', '1', '1', '1', 14, '1990-12-13'),
+(13, 'molina123@gmail.com', 'qwerty', 'mario', 'javier', 'MARTINEZ', 'alvarez', 10, '1990-03-20'),
+(14, 'rubius@yahoo.com', 'asdas', 'lenin', 'abdi', 'alvarez', 'alonzo', 10, '1980-05-12'),
+(17, 'coreomio@live.com', 'qwerty', 'qwerty', 'simon', 'alavarez', 'marcio', 1, '1990-01-15'),
+(18, 'kenny12@asda.com', 'qwertyuiop', 'kenny', 'benito', 'maradiaga', 'benet', 1, '1980-12-13'),
+(19, '1', '1', '1', '1', '1', '1', 1, '1000-01-01');
 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `administradores`
+-- Estructura para la vista `checkboxcreadas`
 --
-DROP TABLE IF EXISTS `administradores`;
+DROP TABLE IF EXISTS `checkboxcreadas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `administradores`  AS  select concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `apodo_nombre`,`tab`.`nombre` AS `nombre_tablero`,`nu`.`descripcion` AS `descripcion` from (((`uatablero` `uata` join `usuario` `us` on((`us`.`idusuario` = `uata`.`usuario_idusuario`))) join `tablero` `tab` on((`tab`.`idtablero` = `uata`.`tablero_idtablero`))) join `nivelusuario` `nu` on((`nu`.`idnivelUsuario` = `uata`.`idnivelUsuario`))) where (`nu`.`idnivelUsuario` = 1) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `checkboxcreadas`  AS  select `tar`.`nombre` AS `Nombre_tarea`,`cb`.`descripcion` AS `descripcion`,`cb`.`fechaAsignacion` AS `fechaAsignacion`,concat(`us`.`Pnombre`,' ',`us`.`Papellido`) AS `concat(us.Pnombre,' ',us.Papellido)` from ((((((`tareas` `tar` join `listas` `lis` on((`lis`.`idlistas` = `tar`.`listas_idlistas`))) join `proyecto` `pro` on((`pro`.`idtablero` = `lis`.`tablero_idtablero`))) join `exigibilidad` `exi` on((`exi`.`idexigibilidad` = `tar`.`exigibilidad_idexigibilidad`))) join `checkbox` `cb` on((`cb`.`tareas_idtareas` = `tar`.`idtareas`))) join `uaproyecto` `uap` on((`uap`.`idproyectoAsignado` = `cb`.`UATablero_asignado`))) join `usuario` `us` on((`us`.`idusuario` = `uap`.`usuario_idusuario`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `checkbox_tareas`
+-- Estructura para la vista `listascreadas`
 --
-DROP TABLE IF EXISTS `checkbox_tareas`;
+DROP TABLE IF EXISTS `listascreadas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `checkbox_tareas`  AS  select `tab`.`nombre` AS `Ntablero`,`tab`.`descripcion` AS `dTblero`,`lis`.`nombre` AS `lista`,`tar`.`nombre` AS `NTAREA`,`tar`.`descripcion` AS `DTAREA`,`tar`.`fechaCreacion` AS `fechaCreacion`,`tar`.`fechaMaxima` AS `fechaMaxima`,`ex`.`nombre` AS `ENOMBRE`,`cb`.`descripcion` AS `CHE` from (((((`tablero` `tab` join `listas` `lis` on((`lis`.`tablero_idtablero` = `tab`.`idtablero`))) join `tareas` `tar` on((`tar`.`listas_idlistas` = `lis`.`idlistas`))) join `tipotablero` `tt` on((`tt`.`idtablero` = `tab`.`tipoTablero_idtablero`))) join `checkbox` `cb` on((`cb`.`tareas_idtareas` = `tar`.`idtareas`))) join `exigibilidad` `ex` on((`ex`.`idexigibilidad` = `tar`.`exigibilidad_idexigibilidad`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `listascreadas`  AS  select `pro`.`nombre` AS `proyecto`,`lis`.`nombre` AS `Nlista` from (`proyecto` `pro` join `listas` `lis` on((`lis`.`tablero_idtablero` = `pro`.`idtablero`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `evaluacionhecha`
+-- Estructura para la vista `mensajeenviado`
 --
-DROP TABLE IF EXISTS `evaluacionhecha`;
+DROP TABLE IF EXISTS `mensajeenviado`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `evaluacionhecha`  AS  select `eva`.`descripcion` AS `descripcion`,`eva`.`fechaElaborada` AS `fechaElaborada`,`eva`.`puntosDados` AS `puntosDados`,`eva`.`puntosMaximos` AS `puntosMaximos`,((`eva`.`puntosDados` / `eva`.`puntosMaximos`) * 100) AS `porcentajeObtenido`,concat('apodo del usuario:  ',`us`.`nombreUsuario`,'   nombre:  ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `evaluado`,concat('apodo del usuario:  ',`evaluador`.`nombreUsuario`,'   nombre:  ',`evaluador`.`Pnombre`,' ',`evaluador`.`Papellido`) AS `evaluador` from ((((`evaluacion` `eva` join `evaluaciondesempenio` `ed` on((`ed`.`evaluacion_idevaluacion` = `eva`.`idevaluacion`))) join `buzonnotificaciones` `bn` on((`bn`.`idbuzon` = `ed`.`notificacion_idnotificacion`))) join `usuario` `us` on((`us`.`idusuario` = `bn`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from (`usuario` `us` join `evaluacion` `eva` on((`eva`.`usuario_idusuario` = `us`.`idusuario`)))) `evaluador` on((`evaluador`.`idusuario` = `eva`.`usuario_idusuario`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `mensajeenviado`  AS  select concat(`us`.`Pnombre`,' ',`us`.`Papellido`) AS `usuario_envia`,`men`.`textoMensaje` AS `textoMensaje`,`men`.`fechaMensaje` AS `fechaMensaje`,concat(`ur`.`Pnombre`,'  ',`ur`.`Papellido`) AS `usuario_Resive` from (((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_IDBM_ENVIA`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from ((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_idBM_RESIVE`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`)))) `ur` on((`ur`.`idusuario` = `men`.`BM_idBM_RESIVE`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `libretaspusuario`
+-- Estructura para la vista `nivelesusuarioexistentes`
 --
-DROP TABLE IF EXISTS `libretaspusuario`;
+DROP TABLE IF EXISTS `nivelesusuarioexistentes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `libretaspusuario`  AS  select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido`,count(0) AS `notas_por_libretas` from (((`usuario` `us` join `cuaderno` `cdn` on((`cdn`.`idusuario` = `us`.`idusuario`))) join `libreta` `lib` on((`lib`.`idcuaderno` = `cdn`.`idnotas`))) join `notas` `n` on((`n`.`libreta_idlibreta` = `lib`.`idlibreta`))) group by `us`.`idusuario`,`us`.`nombreUsuario`,`us`.`Pnombre`,`us`.`Papellido`,`lib`.`nombre` ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `mensajesenviados`
---
-DROP TABLE IF EXISTS `mensajesenviados`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `mensajesenviados`  AS  select `men`.`textoMensaje` AS `textoMensaje`,`men`.`fechaMensaje` AS `fechaMensaje`,concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,'  ',`us`.`Papellido`) AS `envia`,concat(`usres`.`nombreUsuario`,'  ',`usres`.`Pnombre`,'  ',`usres`.`Papellido`) AS `resive` from (((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_IDBM_ENVIA`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`))) join (select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido` from ((`mensajes` `men` join `buzonmensaje` `bm` on((`bm`.`idbuzon` = `men`.`BM_idBM_RESIVE`))) join `usuario` `us` on((`us`.`idusuario` = `bm`.`usuario_idusuario`)))) `usres` on((`usres`.`idusuario` = `men`.`BM_idBM_RESIVE`))) ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `nnotasenlibretas`
---
-DROP TABLE IF EXISTS `nnotasenlibretas`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `nnotasenlibretas`  AS  select `us`.`idusuario` AS `idusuario`,`us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido`,`lib`.`nombre` AS `nombre`,count(0) AS `notas_por_libretas` from (((`usuario` `us` join `cuaderno` `cdn` on((`cdn`.`idusuario` = `us`.`idusuario`))) join `libreta` `lib` on((`lib`.`idcuaderno` = `cdn`.`idnotas`))) join `notas` `n` on((`n`.`libreta_idlibreta` = `lib`.`idlibreta`))) group by `us`.`idusuario`,`us`.`nombreUsuario`,`us`.`Pnombre`,`us`.`Papellido`,`lib`.`nombre` ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `notaslibretas`
---
-DROP TABLE IF EXISTS `notaslibretas`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `notaslibretas`  AS  select `us`.`nombreUsuario` AS `nombreUsuario`,`us`.`Pnombre` AS `Pnombre`,`us`.`Papellido` AS `Papellido`,`lib`.`nombre` AS `Nombre_Libreta`,`n`.`texto` AS `Nota_libreta` from (((`usuario` `us` join `cuaderno` `cdn` on((`cdn`.`idusuario` = `us`.`idusuario`))) join `libreta` `lib` on((`lib`.`idcuaderno` = `cdn`.`idnotas`))) join `notas` `n` on((`n`.`libreta_idlibreta` = `lib`.`idlibreta`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `nivelesusuarioexistentes`  AS  select `nivelusuario`.`idnivelUsuario` AS `idnivelUsuario`,`nivelusuario`.`descripcion` AS `descripcion` from `nivelusuario` ;
 
 -- --------------------------------------------------------
 
@@ -1137,29 +1297,20 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `privilegiosdeusuario`
+-- Estructura para la vista `paisesexistentes`
 --
-DROP TABLE IF EXISTS `privilegiosdeusuario`;
+DROP TABLE IF EXISTS `paisesexistentes`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `privilegiosdeusuario`  AS  select concat(`us`.`nombreUsuario`,' ',`us`.`Pnombre`,' ',`us`.`Papellido`) AS `apodo_nombre`,`tab`.`nombre` AS `nombre_tablero`,`nu`.`descripcion` AS `descripcion` from (((`uatablero` `uata` join `usuario` `us` on((`us`.`idusuario` = `uata`.`usuario_idusuario`))) join `tablero` `tab` on((`tab`.`idtablero` = `uata`.`tablero_idtablero`))) join `nivelusuario` `nu` on((`nu`.`idnivelUsuario` = `uata`.`idnivelUsuario`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `paisesexistentes`  AS  select `pais`.`idpais` AS `idpais`,`pais`.`nombre` AS `nombre` from `pais` ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `tareascreada`
+-- Estructura para la vista `tareascreadas`
 --
-DROP TABLE IF EXISTS `tareascreada`;
+DROP TABLE IF EXISTS `tareascreadas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `tareascreada`  AS  select `tablero`.`nombre` AS `tableroN`,`tablero`.`descripcion` AS `tdescripcion`,`lis`.`nombre` AS `estado`,`tareas`.`nombre` AS `tnombre`,`tareas`.`descripcion` AS `tadescripcion` from ((`tablero` join `listas` `lis` on((`lis`.`tablero_idtablero` = `tablero`.`idtablero`))) join `tareas` on((`tareas`.`listas_idlistas` = `lis`.`idlistas`))) ;
-
--- --------------------------------------------------------
-
---
--- Estructura para la vista `tareas_estad_asignados`
---
-DROP TABLE IF EXISTS `tareas_estad_asignados`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `tareas_estad_asignados`  AS  select `tar`.`nombre` AS `tarea`,`tab`.`nombre` AS `nombre_tablero`,`lis`.`nombre` AS `nombre`,`us`.`nombreUsuario` AS `nombreUsuario` from (((((`uatarea` `uata` join `uatablero` `uat` on((`uat`.`idproyectoAsignado` = `uata`.`UATablero_idUATablero`))) join `tablero` `tab` on((`tab`.`idtablero` = `uat`.`tablero_idtablero`))) join `listas` `lis` on((`lis`.`tablero_idtablero` = `tab`.`idtablero`))) join `tareas` `tar` on((`tar`.`idtareas` = `uata`.`tarea_idtarea`))) join `usuario` `us` on((`us`.`idusuario` = `uat`.`usuario_idusuario`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `tareascreadas`  AS  select `tar`.`nombre` AS `Nombre_tarea`,`tar`.`descripcion` AS `descripcion`,`exi`.`nombre` AS `exiibilidad_nombre`,`tar`.`fechaCreacion` AS `fechaCreacion`,`tar`.`fechaMaxima` AS `fechaMaxima`,`lis`.`nombre` AS `nombre_lista`,`pro`.`nombre` AS `nombre_proyecto` from (((`tareas` `tar` join `listas` `lis` on((`lis`.`idlistas` = `tar`.`listas_idlistas`))) join `proyecto` `pro` on((`pro`.`idtablero` = `lis`.`tablero_idtablero`))) join `exigibilidad` `exi` on((`exi`.`idexigibilidad` = `tar`.`exigibilidad_idexigibilidad`))) ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
