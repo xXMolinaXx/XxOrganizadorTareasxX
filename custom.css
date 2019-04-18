@@ -1,0 +1,60 @@
+html {
+  font-size: 14px;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.container {
+  max-width: 960px;
+}
+
+.pricing-header {
+  max-width: 700px;
+}
+
+.card-deck .card {
+  min-width: 220px;
+}
+
+form {
+  display: block;
+  margin-top: 0em;
+  margin:25px;
+  padding-top: 0px;
+}
+
+.boton-anade-lista{
+  height: 100px;
+  font-size: 14px;
+  line-height: 5px;
+  width: 100px;
+}
+
+.list-wrapper {
+  width: 270px;
+  margin: 0 4px;
+  height: 100%;
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.list-wrapper:first-child {
+  margin-left: 8px;
+}
+
+.list {
+  background-color: #dfe3e6;
+  border-radius: 3px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  position: relative;
+  white-space: normal;
+}
+
