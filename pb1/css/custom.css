@@ -1,0 +1,118 @@
+html {
+  font-size: 14px;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.container {
+  max-width: 960px;
+}
+
+.pricing-header {
+  max-width: 700px;
+}
+
+.card-deck .card {
+  min-width: 220px;
+}
+
+form {
+  display: block;
+  margin-top: 0em;
+  margin:25px;
+  padding-top: 0px;
+}
+
+.boton-anade-lista{
+  height: 100px;
+  font-size: 14px;
+  line-height: 5px;
+  width: 100px;
+}
+
+.list-wrapper {
+  width: 270px;
+  margin: 0 4px;
+  height: 100%;
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.list-wrapper:first-child {
+  margin-left: 8px;
+}
+
+.list {
+  background-color: #dfe3e6;
+  border-radius: 3px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  position: relative;
+  white-space: normal;
+}
+/*ventanas modal*/
+.inputI{
+  margin: 5px;
+  width: 341px;
+}
+
+/**bloque de tareas**/
+.dTarea{
+  background: white;
+  border-radius: 10px; 
+  padding: 2px;
+  margin-bottom: 5px
+}
+
+.tarea{
+  border: black;
+  border-radius: 10px;
+  margin: 10px 0px 10px 0px
+    
+}
+/**bloque de listas*/
+.lista{
+  border: black;
+  border-radius: 5px;
+  background:powderblue;
+  height: 90%;
+  margin: 15px;
+  padding: 10px;
+  width: 280px;
+
+}
+
+.tlista{
+  color: darkcyan;
+  font-size: 14px;
+  font-weight: 600;
+  font-size: larger;
+
+}
+
+/***div donde estan los botones en la lista de agregar lista,tarea*****/
+#div-botones{
+  padding: 10px;
+    background: gainsboro;
+    border-top: solid;
+    border-color: antiquewhite;
+    top: 570px;
+    position: fixed;
+    width: 100%;
+}
+
+/**CSS donde van todos los css del div de proyecto**/
+.div-pro{
+  background:powderblue ;
+  height: 200px;
+  margin: 20px;
+  border-radius: 15px;
+  padding: 20px;
+}
